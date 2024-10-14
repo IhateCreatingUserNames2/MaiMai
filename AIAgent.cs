@@ -1,4 +1,3 @@
-// AIAgent.cs
 using System.Collections.Generic;
 using UnityEngine;
 using LLMUnity;
@@ -30,10 +29,14 @@ public class AIAgent
         Personality = personality;
         Background = background;
         UserConversations = new Dictionary<string, List<string>>();
-        memoryManager = memoryMgr;
+        memoryManager = memoryMgr ?? LLMCharacterMemoryManager.Instance;
+
+        if (memoryManager == null)
+        {
+            Debug.LogError("AIAgent constructor: LLMCharacterMemoryManager instance is null.");
+        }
         SetupSystemPrompt();
     }
-
 
     public void SetLLMCharacter(LLMCharacter character)
     {
@@ -64,6 +67,12 @@ public class AIAgent
         // Retrieve relevant context using RAGSearchUnity
         string retrievedContext = RetrieveRelevantContext(message, userId);
 
+        // Check if context retrieval failed or was empty
+        if (retrievedContext == null)
+        {
+            Debug.LogWarning("No relevant context found for the current interaction.");
+            retrievedContext = ""; // Use an empty context instead of null to avoid issues
+        }
 
         // Construct prompt with chat history and retrieved context
         string fullPrompt = ConstructConversationPromptWithEmbedding(userId, retrievedContext);
@@ -83,12 +92,12 @@ public class AIAgent
             {
                 if (!string.IsNullOrEmpty(partialReply))
                 {
-                // Extract only the new text since the last callback
-                string newText = partialReply.Substring(previousLength);
+                    // Extract only the new text since the last callback
+                    string newText = partialReply.Substring(previousLength);
                     previousLength = partialReply.Length;
 
-                // Append the new text to the lastPartialReply
-                lastPartialReply += newText;
+                    // Append the new text to the lastPartialReply
+                    lastPartialReply += newText;
                 }
             });
 
@@ -110,12 +119,17 @@ public class AIAgent
         return aiResponse;
     }
 
-
     // Retrieve relevant context using RAGSearchUnity
     private string RetrieveRelevantContext(string query, string userId)
     {
         // Use the memoryManager to search for relevant context
-        string retrievedContext = memoryManager.SearchChatHistory(query, AgentId);
+        string retrievedContext = memoryManager?.SearchChatHistory(query, AgentId);
+
+        // Ensure retrievedContext is not null
+        if (retrievedContext == null)
+        {
+            retrievedContext = ""; // Set to empty if no context is found
+        }
 
         // Exclude recent chat history from retrieved context
         if (UserConversations.ContainsKey(userId))
@@ -133,11 +147,17 @@ public class AIAgent
         return retrievedContext;
     }
 
-
     private void SaveConversation(string conversation)
     {
         // Use the memoryManager to embed and save the conversation
-        memoryManager.EmbedChatHistory(conversation, AgentId);
+        if (memoryManager != null)
+        {
+            memoryManager.EmbedChatHistory(conversation, AgentId);
+        }
+        else
+        {
+            Debug.LogWarning("Memory Manager is not initialized. Conversation is not saved.");
+        }
     }
 
     public void AddToConversation(string userId, string message)
@@ -188,5 +208,4 @@ public class AIAgent
 
         return prompt;
     }
-
 }

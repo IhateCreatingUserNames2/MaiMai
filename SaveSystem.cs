@@ -1,9 +1,9 @@
-// SaveSystem.cs
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Newtonsoft.Json;
 using LLMUnity;
+using UnityEngine.Networking; // For Android compatibility
 
 public static class SaveSystem
 {
@@ -104,13 +104,25 @@ public static class SaveSystem
         {
             try
             {
-                string json = File.ReadAllText(filePath);
+                string json = ReadFile(filePath); // Use custom method for Android compatibility
                 AIAgentData data = JsonConvert.DeserializeObject<AIAgentData>(json);
                 if (data != null)
                 {
-                    // Assign LLMCharacter
-                    LLMCharacter llmCharacter = Object.FindObjectOfType<LLMCharacter>();
+                    // Replace Object.FindObjectOfType with PicoDialogue.Instance.llmCharacter
+                    if (PicoDialogue.Instance == null || PicoDialogue.Instance.llmCharacter == null)
+                    {
+                        Debug.LogError("SaveSystem: PicoDialogue.Instance or its LLMCharacter is null.");
+                        return null;
+                    }
+                    LLMCharacter llmCharacter = PicoDialogue.Instance.llmCharacter;
+
                     LLMCharacterMemoryManager memoryManager = Object.FindObjectOfType<LLMCharacterMemoryManager>();
+
+                    if (memoryManager == null)
+                    {
+                        Debug.LogError("SaveSystem: LLMCharacterMemoryManager not found in the scene.");
+                        return null;
+                    }
 
                     if (llmCharacter != null && memoryManager != null)
                     {
@@ -147,6 +159,31 @@ public static class SaveSystem
             Debug.LogWarning($"No saved data for agent found at '{filePath}'.");
         }
         return null;
+    }
+
+    // Method to handle reading files, ensuring compatibility across platforms
+    private static string ReadFile(string filePath)
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        // For Android, use UnityWebRequest
+        string json = "";
+        UnityWebRequest request = UnityWebRequest.Get("file://" + filePath);
+        request.SendWebRequest();
+        while (!request.isDone) { } // Wait for request to complete
+
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            json = request.downloadHandler.text;
+        }
+        else
+        {
+            Debug.LogError($"Failed to load file at {filePath}: {request.error}");
+        }
+        return json;
+#else
+        // For other platforms, use File.ReadAllText
+        return File.ReadAllText(filePath);
+#endif
     }
 }
 

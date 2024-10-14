@@ -13,26 +13,18 @@ public class AIAgentInteraction : MonoBehaviour
     {
         if (picoDialogue == null)
         {
-            // Attempt to find PicoDialogue if not assigned
-            GameObject dialogueELLMCharacterGO = GameObject.Find("DialogueELLMCHARACTER");
-            if (dialogueELLMCharacterGO != null)
+            picoDialogue = PicoDialogue.Instance; // Ensure PicoDialogue implements a singleton
+            if (picoDialogue == null)
             {
-                picoDialogue = dialogueELLMCharacterGO.GetComponent<PicoDialogue>();
-                if (picoDialogue == null)
-                {
-                    Debug.LogError("AIAgentInteraction: PicoDialogue component is missing on DialogueELLMCHARACTER GameObject.");
-                }
-                else
-                {
-                    Debug.Log("PicoDialogue successfully assigned in AIAgentInteraction.");
-                }
+                Debug.LogError("AIAgentInteraction: PicoDialogue.Instance is null. Ensure PicoDialogue is present in the scene.");
             }
             else
             {
-                Debug.LogError("AIAgentInteraction: DialogueELLMCHARACTER GameObject not found in the scene.");
+                Debug.Log("PicoDialogue successfully assigned in AIAgentInteraction.");
             }
         }
     }
+
 
 
     // Method to assign an AI agent to this interaction system

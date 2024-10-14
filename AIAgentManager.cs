@@ -21,18 +21,54 @@ public class AIAgentManager : MonoBehaviour
 
     private List<GameObject> spawnedAgents = new List<GameObject>(); // List to track spawned AI agents
 
-    private void Start()
+
+    private void Awake()
     {
         if (memoryManager == null)
         {
-            memoryManager = GetComponent<LLMCharacterMemoryManager>();
+            memoryManager = LLMCharacterMemoryManager.Instance;
             if (memoryManager == null)
             {
-                memoryManager = gameObject.AddComponent<LLMCharacterMemoryManager>();
+                Debug.LogError("LLMCharacterMemoryManager is not found in Awake. Ensure it is initialized in the MainMenu scene.");
+            }
+            else
+            {
+                Debug.Log("LLMCharacterMemoryManager successfully assigned in AIAgentManager.");
             }
         }
+    }
 
-        memoryManager.embeddingModel = embeddingModel;
+
+    private void Start()
+    {
+        // Dynamically assign LLMCharacterMemoryManager if not assigned
+        // If memoryManager is not assigned, dynamically find or create it
+        if (LLMCharacterMemoryManager.Instance == null)
+        {
+            // This block is only for testing in the Unity Editor when starting directly from the Map Scene
+#if UNITY_EDITOR
+            Debug.LogWarning("LLMCharacterMemoryManager not found. Creating a new instance for testing.");
+            GameObject memoryManagerGO = new GameObject("LLMCharacterMemoryManager");
+            memoryManager = memoryManagerGO.AddComponent<LLMCharacterMemoryManager>();
+#else
+        Debug.LogError("LLMCharacterMemoryManager not found. Ensure the Main Menu scene is loaded first.");
+#endif
+        }
+        else
+        {
+            memoryManager = LLMCharacterMemoryManager.Instance;
+        }
+
+        if (memoryManager != null)
+        {
+            Debug.Log("LLMCharacterMemoryManager successfully assigned.");
+        }
+
+
+        if (embeddingModel != null && memoryManager != null)
+        {
+            memoryManager.embeddingModel = embeddingModel; // Ensure embedding model is linked
+        }
 
         if (selectAIButton != null)
         {
@@ -56,6 +92,7 @@ public class AIAgentManager : MonoBehaviour
 
         PopulateDropdown();
     }
+
 
     public void PopulateDropdown()
     {
@@ -146,11 +183,14 @@ public class AIAgentManager : MonoBehaviour
             if (agent != null)
             {
                 // Ensure llmCharacter is assigned
-                if (agent.llmCharacter == null)
+                if (PicoDialogue.Instance == null || PicoDialogue.Instance.llmCharacter == null)
                 {
-                    Debug.LogError($"AIAgentManager: LLMCharacter is not assigned for agent '{agent.AgentName}'. Assigning PicoDialogue's LLMCharacter.");
-                    agent.SetLLMCharacter(PicoDialogue.Instance.llmCharacter);
+                    Debug.LogError("PicoDialogue instance or LLMCharacter is null. Cannot assign LLMCharacter to agent.");
+                    return; // Early return to avoid proceeding with incomplete assignment
                 }
+
+                agent.SetLLMCharacter(PicoDialogue.Instance.llmCharacter);
+
 
                 agentInteraction.SetAIAgent(agent);
 

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System;
 using System.Linq;
 using TextToSpeech;
+using System.Threading;
 
 public class PicoDialogue : MonoBehaviour, IChatClientListener
 {
@@ -21,6 +22,11 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
 
     private string currentPlayerName;
     private GameObject player; // Reference to the player GameObject
+
+    private bool isLLMInitialized = false;
+    private CancellationTokenSource cancellationTokenSource; // Declare it a
+
+
 
     [Header("UI Elements")]
     public Canvas dialogueCanvas;
@@ -39,7 +45,7 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
     public string npcBackground;
 
     [Header("Photon Chat Settings")]
-    public string appIdChat = "YOUR_PHOTON_CHAT_APP_ID"; // Replace with your Photon Chat App ID
+    public string appIdChat = "3c5a13f7-c3a4-4dfa-bd51-089fabc2c5ba"; // Replace with your Photon Chat App ID
     public string appVersion = "1.0";
     public string fixedRegion = "us"; // Adjust based on your region (e.g., eu, us)
 
@@ -71,39 +77,37 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
         // Validate UI Assignments
         ValidateUIElements();
 
+        // Call this on scene load to reinitialize everything
+        InitializeReferences();
+
+        cancellationTokenSource = new CancellationTokenSource();
+
+
         // Initialize voice toggle button
         InitializeVoiceToggle();
 
         // Get or assign llmCharacter
         if (llmCharacter == null)
         {
-            // Remove the existing GetComponent call and add the following:
-            GameObject dialogueELLMCharacterGO = GameObject.Find("DialogueELLMCHARACTER");
-            if (dialogueELLMCharacterGO != null)
+            llmCharacter = GetComponent<LLMCharacter>();
+            if (llmCharacter == null)
             {
-                llmCharacter = dialogueELLMCharacterGO.GetComponent<LLMCharacter>();
-                if (llmCharacter == null)
-                {
-                    Debug.LogError("PicoDialogue: LLMCharacter component is missing on DialogueELLMCHARACTER GameObject.");
-                }
-                else
-                {
-                    Debug.Log("LLMCharacter successfully assigned from DialogueELLMCHARACTER GameObject.");
-                }
-            }
-            else
-            {
-                Debug.LogError("PicoDialogue: DialogueELLMCHARACTER GameObject not found in the scene.");
+                Debug.LogError("LLMCharacter component is missing on PicoDialogue.");
             }
         }
-
 #if UNITY_ANDROID || UNITY_IOS
-        // Initialize Text-to-Speech
-        InitializeTextToSpeech();
+            // Initialize Text-to-Speech
+            InitializeTextToSpeech();
 #endif
 
         // Initialize Photon Chat
         InitializePhotonChat();
+
+
+        // Start async initialization
+        InitializeLLMService();
+
+        DisableUIForInitialization();
 
         // Hide UI elements at the start
         HideUIElements();
@@ -129,6 +133,135 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
             chatClient.Service(); // Maintain the Photon chat connection
         }
     }
+
+    void OnEnable()
+    {
+        if (Instance == null)
+        {
+            Instance = this; // Reassign singleton instance if needed
+        }
+
+        ReconnectToPhotonChat(); // Ensure Photon Chat is connected when re-entering the room
+
+        InitializeReferences(); // Ensure everything is reinitialized
+
+        if (sendButton != null)
+            sendButton.interactable = true; // Re-enable input if it was disabled
+    }
+
+
+    public void ReconnectToPhotonChat()
+    {
+        if (chatClient == null)
+        {
+            InitializePhotonChat(); // Reinitialize Photon Chat connection if lost
+        }
+        else if (!chatClient.CanChat)
+        {
+            chatClient.Connect(appIdChat, appVersion, new Photon.Chat.AuthenticationValues(userId)); // Reconnect if necessary
+        }
+    }
+
+
+    void InitializeReferences()
+    {
+        // Ensure UI elements are assigned again
+        if (dialogueCanvas == null)
+        {
+            dialogueCanvas = GameObject.Find("DialogueCanvas").GetComponent<Canvas>();
+            if (dialogueCanvas == null)
+            {
+                Debug.LogError("Dialogue Canvas not found in the scene.");
+            }
+        }
+
+        // Reinitialize other references like llmCharacter
+        if (llmCharacter == null)
+        {
+            GameObject dialogueELLMCharacterGO = GameObject.Find("DialogueELLMCHARACTER");
+            if (dialogueELLMCharacterGO != null)
+            {
+                llmCharacter = dialogueELLMCharacterGO.GetComponent<LLMCharacter>();
+                if (llmCharacter == null)
+                {
+                    Debug.LogError("LLMCharacter component is missing.");
+                }
+                else
+                {
+                    Debug.Log("LLMCharacter reinitialized successfully.");
+                }
+            }
+            else
+            {
+                Debug.LogError("DialogueELLMCHARACTER GameObject not found.");
+            }
+        }
+        else
+        {
+            Debug.Log("LLMCharacter is already initialized.");
+        }
+
+        // Reinitialize other critical components here as needed
+    }
+
+
+    private async void InitializeLLMService()
+    {
+        if (isLLMInitialized)
+        {
+            Debug.Log("LLM service already initialized.");
+            return;
+        }
+
+        await EnsureLLMServiceReady();
+
+        EnableUIAfterInitialization();
+
+        isLLMInitialized = true;
+
+        Debug.Log("LLM service is fully initialized.");
+    }
+
+
+    private void DisableUIForInitialization()
+    {
+        if (playerInputPanel != null)
+        {
+            playerInputPanel.SetActive(false); // Disable input panel
+        }
+
+        if (sendButton != null)
+        {
+            sendButton.interactable = false; // Disable send button
+        }
+
+        Debug.Log("UI disabled during LLM initialization.");
+    }
+
+    private void EnableUIAfterInitialization()
+    {
+        if (playerInputPanel != null)
+        {
+            playerInputPanel.SetActive(true); // Enable input panel
+        }
+        else
+        {
+            Debug.LogWarning("PlayerInputPanel is not initialized.");
+        }
+
+        if (sendButton != null)
+        {
+            sendButton.interactable = true; // Enable send button
+        }
+        else
+        {
+            Debug.LogWarning("SendButton is not initialized.");
+        }
+
+        Debug.Log("UI enabled after LLM initialization.");
+    }
+
+
 
     // Method to validate UI elements
     private void ValidateUIElements()
@@ -325,6 +458,7 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
 
         UpdateAgentUI();
         sendButton.interactable = true;
+        await EnsureLLMServiceReady(); // Ensure llm service is ready again
     }
 
 
@@ -352,6 +486,7 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
             if (currentAgent == null)
             {
                 Debug.LogError("Cannot proceed with LLM response. No current agent is set.");
+                ShowDialogue("The AI assistant is currently unavailable.");
                 return;
             }
 
@@ -371,51 +506,110 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
 
     private async Task EnsureLLMServiceReady()
     {
-        if (llmCharacter != null && llmCharacter.llm != null)
+        if (llmCharacter == null || llmCharacter.llm == null)
         {
-            Debug.Log("Waiting for LLM service to be ready...");
-            await llmCharacter.llm.WaitUntilReady();
+            Debug.LogError("llmCharacter or llm is null. Skipping LLM service readiness check.");
+            return;
+        }
+
+        Debug.Log("Waiting for LLM service to be ready...");
+        try
+        {
+            await llmCharacter.llm.WaitUntilReady(); // Ensure LLM is fully ready
             Debug.Log("LLM service is now ready.");
         }
-        else
+        catch (OperationCanceledException)
         {
-            Debug.LogError("LLMCharacter or LLM is null, cannot proceed.");
+            Debug.LogWarning("LLM initialization was canceled.");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error while waiting for LLM service: {ex.Message}");
         }
     }
 
+
+
+
     private async void RunAsyncResponse(string playerInput)
     {
+        // Ensure LLM service is ready
+        Debug.Log("Calling EnsureLLMServiceReady...");
         await EnsureLLMServiceReady();
+        Debug.Log("EnsureLLMServiceReady completed.");
 
         if (isAwaitingResponse)
         {
+            Debug.Log("Already awaiting a response. Exiting method.");
             return; // Exit if already waiting for a response
         }
 
         isAwaitingResponse = true; // Mark the system as awaiting response
+        sendButton.interactable = false; // Disable the send button to prevent multiple clicks
 
         Debug.Log($"Sending prompt to LLM: {playerInput}");
 
         try
         {
-            string aiResponse = await currentAgent.Interact(userId, playerInput);
-            Debug.Log($"Received response from LLM: {aiResponse}");
+            // Guard clause to ensure currentAgent is valid
+            if (currentAgent == null)
+            {
+                Debug.LogError("Cannot proceed with LLM response. No current agent is set.");
+                ShowDialogue("Sorry, no agent is available right now.");
+                return;
+            }
+            Debug.Log("currentAgent is set.");
 
-            // Send response to chat and dialogue UI
-            SendMessageToChat(aiResponse);
-            ShowDialogue(aiResponse);
+            // Guard clause to ensure llmCharacter is valid
+            if (currentAgent.llmCharacter == null)
+            {
+                Debug.LogError("Cannot proceed with LLM response. LLMCharacter is not assigned to the current agent.");
+                ShowDialogue("Sorry, AI is currently unavailable.");
+                return;
+            }
+            Debug.Log("currentAgent.llmCharacter is set.");
+
+            // Guard clause to ensure llm is valid
+            if (currentAgent.llmCharacter.llm == null)
+            {
+                Debug.LogError("Cannot proceed with LLM response. LLM instance is not set.");
+                ShowDialogue("AI service is not initialized properly.");
+                return;
+            }
+            Debug.Log("currentAgent.llmCharacter.llm is set.");
+
+            // Attempt to get the AI response
+            Debug.Log("Calling currentAgent.Interact...");
+            string aiResponse = await currentAgent.Interact(userId, playerInput);
+            Debug.Log("currentAgent.Interact completed.");
+
+            if (string.IsNullOrEmpty(aiResponse))
+            {
+                Debug.LogWarning("AI returned an empty response.");
+                ShowDialogue("Sorry, I couldn't generate a response.");
+            }
+            else
+            {
+                Debug.Log($"Received response from LLM: {aiResponse}");
+
+                // Send response to chat and dialogue UI
+                SendMessageToChat(aiResponse);
+                ShowDialogue(aiResponse);
+            }
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Error during AI interaction: {ex.Message}");
+            Debug.LogError($"Error during AI interaction: {ex.Message}\nStack Trace: {ex.StackTrace}");
             ShowDialogue("Sorry, I couldn't process that.");
         }
         finally
         {
             isAwaitingResponse = false; // Mark the system as free for another request
             sendButton.interactable = true; // Re-enable the send button
+            Debug.Log("RunAsyncResponse method completed.");
         }
     }
+
 
     // Function to send the response to the chat system via bl_RoomChat
     void SendMessageToChat(string message)
@@ -673,6 +867,16 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
             ttsController.Stop();
             Debug.Log("TTS stopped on destroy.");
         }
+
+        cancellationTokenSource?.Cancel();
+
+        // Clean up Photon chat client
+        if (chatClient != null && chatClient.CanChat)
+        {
+            chatClient.Disconnect();
+        }
+
+     
     }
 #endif
 

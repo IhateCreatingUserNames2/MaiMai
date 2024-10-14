@@ -16,13 +16,33 @@ public class AgentCreateUI : MonoBehaviour
 
     private void Start()
     {
+        // Dynamically assign LLMCharacterMemoryManager from the persistent instance
+        if (memoryManager == null)
+        {
+            memoryManager = LLMCharacterMemoryManager.Instance; // Get the singleton instance
+            if (memoryManager == null)
+            {
+                Debug.LogError("LLMCharacterMemoryManager is not found. Ensure it is initialized in the MainMenu scene.");
+            }
+            else
+            {
+                Debug.Log("LLMCharacterMemoryManager successfully assigned from MainMenu.");
+            }
+        }
+
+        // Assign the listener for the Create Agent button
         if (createAgentButton != null)
         {
             createAgentButton.onClick.AddListener(OnCreateAgentClicked);
         }
+        else
+        {
+            Debug.LogError("CreateAgentButton is not assigned.");
+        }
     }
 
-    private void OnCreateAgentClicked()
+
+    public void OnCreateAgentClicked()
     {
         string agentName = agentNameInput.text.Trim();
         string personality = personalityInput.text.Trim();
