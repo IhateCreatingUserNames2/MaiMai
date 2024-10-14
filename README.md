@@ -1,5 +1,9 @@
 # NPC Interaction System with AI Agent (LLMUnity Framework)
 
+This requires: LLMUnity and RagSearchUnity Imported
+https://github.com/undreamai/LLMUnity
+https://github.com/undreamai/RAGSearchUnity
+
 This project is focused on creating an NPC interaction system in Unity using the **LLMUnity** framework. The system allows NPCs to interact with players through AI-driven dialogue, memory management, and context-based responses.
 
 ## Key Components
