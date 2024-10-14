@@ -1,107 +1,131 @@
-# README for AI Agent Interaction System
+# NPC Interaction System with AI Agent (LLMUnity Framework)
 
-## Overview
-This AI Agent Interaction system is built using Unity and integrates with LLM (Large Language Model) capabilities for interactive dialogue and agent management. The system allows creating, interacting with, and managing multiple AI agents, each with a personality, background, and memory capabilities. It is designed for use in multiplayer environments and supports interactions via Photon Chat.
+This project is focused on creating an NPC interaction system in Unity using the **LLMUnity** framework. The system allows NPCs to interact with players through AI-driven dialogue, memory management, and context-based responses.
 
-## File Descriptions
+## Key Components
 
-### 1. `AIAgentInteraction.cs`
-This script handles interactions between the player and an assigned AI agent. It manages assigning agents to the interaction system, tracking player proximity, and invoking conversations via dialogue UI elements.
+### **AIAgent.cs**
 
-**Key Features:**
-- Assigns an AI agent for interaction.
-- Tracks player entry and exit from interaction zones via Unity triggers.
-- Opens dialogue input UI for player interactions and processes responses.
-- Integrates with `PicoDialogue` for managing the dialogue flow.
-- Logs and manages interactions, ensuring the agent's context is set up properly.
+Represents an AI-driven NPC (agent) with a unique `AgentId`, name, personality, and background. Each agent can interact with players, store conversation history, and retrieve context using a memory manager.
 
-### 2. `AIManager.cs`
-The core manager for handling all AI agents within the game. It ensures that agents are loaded, registered, and properly managed throughout the game.
+- **Key Methods**:
+  - `Interact`: Handles player messages, retrieves relevant context using the memory manager, and constructs a prompt for the AI.
+  - `RetrieveRelevantContext`: Fetches relevant conversation history or context for better responses.
 
-**Key Features:**
-- Registers new AI agents.
-- Provides functions to retrieve AI agents by name.
-- Loads agents and their chat history on game start.
-- Manages all active AI agents globally, ensuring persistence between scenes.
+---
 
-### 3. `AIAgentManager.cs`
-This script manages the UI for selecting and spawning AI agents in the game. It controls dropdown options for selecting agents and handles the spawning and despawning of AI agents in the scene.
+### **PicoDialogue.cs**
 
-**Key Features:**
-- Populates dropdown UI with available agents.
-- Handles the logic for spawning and despawning AI agents.
-- Saves the agent's chat data and history using `LLMCharacterMemoryManager`.
+Manages the interaction between the player and the NPC, connecting player input to the AI agent and controlling the dialogue UI. This system supports both floating dialogue and Photon Chat integration for multiplayer.
 
-### 4. `PicoDialogue.cs`
-Manages the dialogue system that allows players to interact with AI agents through text input. It includes the logic for sending player messages to the AI agent and displaying AI responses via UI elements.
+- **Key Methods**:
+  - `OpenPlayerInputUI`: Displays the input UI when the player is near an NPC.
+  - `RunAsyncResponse`: Sends player input to the AI agent and displays the agent's response.
 
-**Key Features:**
-- Handles dialogue input UI for player interactions.
-- Manages the connection to Photon Chat for multiplayer interactions.
-- Supports voice integration (on Android and iOS) using Text-to-Speech (TTS).
-- Retrieves and displays chat history during interactions.
+---
 
-### 5. `PermissionManager.cs`
-This script manages permissions for Android devices, ensuring that necessary permissions (e.g., storage, microphone, location) are requested when the game starts.
+### **AIAgentManager.cs**
 
-**Key Features:**
-- Requests storage, microphone, camera, and location permissions for Android.
-- Provides utility to check if all permissions have been granted.
+Responsible for spawning AI agents, managing agent registration, and linking agents with **PicoDialogue**. It also handles loading chat history and ensures that agents are linked to their memory for context-based responses.
 
-### 6. `ModelSelector.cs`
-This script allows players to select and change the LLM model being used by the AI agents through a dropdown UI.
+- **Key Methods**:
+  - `SpawnAI`: Instantiates an AI agent in the scene and assigns the necessary components for interaction.
+  - `LoadAllAgents`: Loads agents from saved data using the **SaveSystem**.
 
-**Key Features:**
-- Populates a dropdown with available AI models from a JSON file (`models.json`).
-- Handles model switching by destroying the current LLM instance and loading the new model.
+---
 
-### 7. `AIAgent.cs`
-Represents individual AI agents in the game. Each agent has an ID, name, personality, background, and their own conversation history.
+### **SaveSystem.cs**
 
-**Key Features:**
-- Stores agent-specific information like personality and background.
-- Maintains a history of conversations with players.
-- Uses `LLMCharacter` for managing interactions and conversation generation.
-- Embeds and retrieves relevant context for interactions using memory capabilities.
+Handles saving and loading AI agents and their conversation histories. It stores agent data, including chat history, using JSON serialization.
 
-### 8. `AgentCreateUI.cs`
-This script handles the UI for creating new AI agents. Players can define a new agent’s name, personality, and background, which is then registered and made available in the dropdown list.
+- **Key Methods**:
+  - `SaveAllAgents`: Saves all registered AI agents and their histories.
+  - `LoadAllAgents`: Loads all agents and their chat histories back into the system.
 
-**Key Features:**
-- UI input for creating agents with custom names, personalities, and backgrounds.
-- Registers the newly created agent in the system for future interactions.
+---
 
-### 9. `SaveSystem.cs`
-A utility class for saving and loading AI agents' data. It manages saving agent configurations and their conversation history to disk.
+### **AgentCreateUI.cs**
 
-**Key Features:**
-- Saves and loads all AI agents and their associated data (including conversation history).
-- Ensures agent data is persistent across sessions using JSON serialization.
+Provides a UI for creating new AI agents. Players or developers can input agent names, personalities, and backgrounds to instantiate a new AI agent.
 
-### 10. `LLMCharacterMemoryManager.cs`
-This script is responsible for managing AI agents' memory and chat history. It uses embeddings to store and retrieve relevant parts of past conversations.
+- **Key Methods**:
+  - `OnCreateAgentClicked`: Creates a new agent using the provided inputs and registers it with the **AIAgentManager**.
 
-**Key Features:**
-- Embeds and saves chat history for each AI agent.
-- Retrieves relevant context based on player input for use in conversation generation.
-- Saves and loads embeddings to persist the memory across sessions.
+---
 
-## Usage Instructions
+### **LLMCharacterMemoryManager.cs**
 
-### Setting up AI Agents:
-- Use the `AgentCreateUI` script to create new AI agents by defining their name, personality, and background.
-- Agents will be registered in the `AIManager`, and their data will be saved for future sessions.
+Manages the memory of each AI agent by embedding and retrieving conversation history for context-based responses. It uses a **SearchEngine** to retrieve relevant conversations.
 
-### Interacting with AI Agents:
-- When the player enters an AI agent's interaction zone, the `AIAgentInteraction` script will trigger the dialogue system.
-- Players can input text through the dialogue UI to interact with the agent.
-- The AI agent will generate a response using the LLM and context retrieved from its memory.
+- **Key Methods**:
+  - `EmbedChatHistory`: Embeds chat history into the memory for future retrieval.
+  - `SearchChatHistory`: Retrieves relevant past conversations based on the player’s query.
 
-### Switching AI Models:
-- Use the `ModelSelector` to switch between different LLM models by selecting a model from the dropdown menu and applying the change.
+---
 
-### Managing Permissions (Android):
-- The `PermissionManager` script will automatically request necessary permissions when the game starts on Android devices. Ensure all required permissions are granted for the full functionality of the game.
+### **ModelSelector.cs**
 
-### Saving and Loading Data:
-- All AI agents’ data and chat history will be saved to persistent storage by the `SaveSystem`. This ensures that agents and their conversation history are available across different gaming sessions.
+Provides UI functionality to select and switch between different LLM (Language Model) configurations.
+
+- **Key Methods**:
+  - `OnChangeModelButtonClicked`: Switches the AI model used by **LLMCharacter** based on player selection.
+
+---
+
+### **GameSettings.cs**
+
+Handles global settings for the game, such as enabling voice-over for the AI responses.
+
+---
+
+## Interaction Flow
+
+1. **Agent Creation**: New agents are created using the **AgentCreateUI** by providing personality and background information.
+2. **Agent Registration**: The **AIAgentManager** registers the agent, stores it, and can spawn it in the game world.
+3. **Player Interaction**: When a player approaches an AI agent, **PicoDialogue** opens the player input UI, allowing the player to send messages.
+4. **AI Response**: The agent uses its memory and context from previous conversations to interact with the player. **LLMCharacter** generates dynamic responses, displayed on the screen.
+5. **Saving Data**: Agent data, including chat history, is saved via the **SaveSystem** for persistent interactions across game sessions.
+
+---
+
+## Displaying LLM Output in PicoDialogue
+
+To display the LLM output in **PicoDialogue**, follow these steps:
+
+1. **Set Agent Data**: Assign the correct AI agent using `SetAgentData` when the player interacts with an NPC:
+    ```csharp
+    picoDialogue.SetAgentData(assignedAgent);
+    ```
+
+2. **Player Input Handling**: Process the player's input when they click the send button:
+    ```csharp
+    public void OnSendButtonClicked()
+    {
+        string playerInput = playerInputField.text.Trim();
+        RunAsyncResponse(playerInput); // Send input for AI processing
+    }
+    ```
+
+3. **Run Async Response**: Send the player's message to the AI, which generates a response using its memory:
+    ```csharp
+    private async void RunAsyncResponse(string playerInput)
+    {
+        string aiResponse = await currentAgent.Interact(userId, playerInput);
+        ShowDialogue(aiResponse); // Display the response
+    }
+    ```
+
+4. **Show Dialogue**: Display the AI's response in both the dialogue UI and floating text:
+    ```csharp
+    public void ShowDialogue(string message)
+    {
+        dialogueText.text = message; // Display in UI
+        floatingDialogueText.text = message; // Display floating text
+    }
+    ```
+
+This system provides seamless NPC interaction where the AI generates dynamic, context-aware responses based on the player's input and the agent’s memory.
+
+---
+
+Feel free to explore and modify these components as per your project needs!
