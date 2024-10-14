@@ -130,6 +130,8 @@ To display the LLM output in **PicoDialogue**, follow these steps:
 
 This system provides seamless NPC interaction where the AI generates dynamic, context-aware responses based on the player's input and the agent’s memory.
 
+
+Some of those files need to be loaded as components in the scene, aiagentinteraction needs to be loaded in the NPC prefab
 ---
 
 Feel free to explore and modify these components as per your project needs!
