@@ -4,20 +4,6 @@ This requires: LLMUnity and RagSearchUnity Imported
 https://github.com/undreamai/LLMUnity
 https://github.com/undreamai/RAGSearchUnity
 
-This code was made to work with MFPS. It has PhotonChat Connection. You can exclude those parts and use only the "aiResponse" to get the Ai output. 
-
-GAMEOBJECTS AND COMPONENTS:
-AgentCreateUI // 
-PICODIALOGUE and LLMCHARACTER(SAME GO) //
-MemoryManager (LLmCharacterMemoryManager and Embeddings.cs(RAG) in same GO) //
-LLM //
-ModelSelect //
-AiAgentManager //
-INSIDE THE PREFAB OF THE NPC = AiAgentInteraction ///
-AiManager ///
-///
-TTS IS NOT WORKING
-///
 
 This project is focused on creating an NPC interaction system in Unity using the **LLMUnity** framework. The system allows NPCs to interact with players through AI-driven dialogue, memory management, and context-based responses.
 
