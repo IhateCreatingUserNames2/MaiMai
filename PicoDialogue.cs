@@ -11,6 +11,7 @@ using System;
 using System.Linq;
 using TextToSpeech;
 using System.Threading;
+using UnityEngine.SceneManagement;
 
 public class PicoDialogue : MonoBehaviour, IChatClientListener
 {
@@ -64,12 +65,21 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
         {
             Instance = this;
             DontDestroyOnLoad(gameObject); // Persist between scene loads
+
+            // Subscribe to the sceneLoaded event
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
             Destroy(gameObject); // Destroy duplicate instances
             return;
         }
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        Debug.Log($"Scene Loaded: {scene.name}");
+        InitializeReferences(); // Re-initialize references to UI elements
     }
 
     void Start()
@@ -163,13 +173,18 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
     }
 
 
-    void InitializeReferences()
+    public void InitializeReferences()
     {
         // Ensure UI elements are assigned again
         if (dialogueCanvas == null)
         {
-            dialogueCanvas = GameObject.Find("DialogueCanvas").GetComponent<Canvas>();
-            if (dialogueCanvas == null)
+            GameObject canvasGO = GameObject.Find("DialogueCanvas");
+            if (canvasGO != null)
+            {
+                dialogueCanvas = canvasGO.GetComponent<Canvas>();
+                Debug.Log("Dialogue Canvas re-initialized.");
+            }
+            else
             {
                 Debug.LogError("Dialogue Canvas not found in the scene.");
             }
@@ -188,7 +203,7 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
                 }
                 else
                 {
-                    Debug.Log("LLMCharacter reinitialized successfully.");
+                    Debug.Log("LLMCharacter re-initialized successfully.");
                 }
             }
             else
@@ -201,7 +216,70 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
             Debug.Log("LLMCharacter is already initialized.");
         }
 
-        // Reinitialize other critical components here as needed
+        // Re-initialize other critical components as needed
+        // For example, re-assign playerInputPanel, playerInputField, sendButton, etc.
+        if (playerInputPanel == null)
+        {
+            playerInputPanel = GameObject.Find("PlayerInputPanel");
+            if (playerInputPanel != null)
+            {
+                Debug.Log("Player Input Panel re-initialized.");
+            }
+            else
+            {
+                Debug.LogError("Player Input Panel not found in the scene.");
+            }
+        }
+
+        if (playerInputField == null)
+        {
+            GameObject inputFieldGO = GameObject.Find("PlayerInputField");
+            if (inputFieldGO != null)
+            {
+                playerInputField = inputFieldGO.GetComponent<TMP_InputField>();
+                Debug.Log("Player Input Field re-initialized.");
+            }
+            else
+            {
+                Debug.LogError("Player Input Field not found in the scene.");
+            }
+        }
+
+        if (sendButton == null)
+        {
+            GameObject sendButtonGO = GameObject.Find("SendButton");
+            if (sendButtonGO != null)
+            {
+                sendButton = sendButtonGO.GetComponent<Button>();
+                Debug.Log("Send Button re-initialized.");
+            }
+            else
+            {
+                Debug.LogError("Send Button not found in the scene.");
+            }
+        }
+
+        // Re-assign event listeners if necessary
+        if (sendButton != null)
+        {
+            sendButton.onClick.RemoveAllListeners();
+            sendButton.onClick.AddListener(OnSendButtonClicked);
+        }
+
+        if (playerInputPanel != null)
+        {
+            playerInputPanel.SetActive(false); // Hide input panel initially
+        }
+
+        if (dialogueCanvas != null)
+        {
+            dialogueCanvas.gameObject.SetActive(false); // Hide dialogue canvas initially
+        }
+
+        // Similarly re-initialize other UI elements like dialogueText, floatingDialogueText, etc.
+
+        // Ensure fonts are assigned correctly
+        AssignFonts();
     }
 
 
@@ -876,7 +954,9 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
             chatClient.Disconnect();
         }
 
-     
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+
+
     }
 #endif
 

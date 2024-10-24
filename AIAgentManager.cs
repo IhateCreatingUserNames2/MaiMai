@@ -5,6 +5,7 @@ using TMPro;
 using System.Collections.Generic;
 using System.Collections;
 using LLMUnity;
+using System;
 using RAGSearchUnity;
 using System.Linq;
 
@@ -183,32 +184,42 @@ public class AIAgentManager : MonoBehaviour
             if (agent != null)
             {
                 // Ensure llmCharacter is assigned
-                if (PicoDialogue.Instance == null || PicoDialogue.Instance.llmCharacter == null)
-                {
-                    Debug.LogError("PicoDialogue instance or LLMCharacter is null. Cannot assign LLMCharacter to agent.");
-                    return; // Early return to avoid proceeding with incomplete assignment
-                }
-
-                agent.SetLLMCharacter(PicoDialogue.Instance.llmCharacter);
-
-
-                agentInteraction.SetAIAgent(agent);
-
                 if (PicoDialogue.Instance != null)
                 {
-                    PicoDialogue.Instance.SetAgentData(agent);
+                    // Re-initialize PicoDialogue references
+                    PicoDialogue.Instance.InitializeReferences();
 
-                    // Load chat history for the newly spawned agent
-                    agent.llmCharacter.Load($"{agent.AgentId}_chatHistory");
+                    // Check if llmCharacter is assigned, re-initialize if necessary
+                    if (PicoDialogue.Instance.llmCharacter == null)
+                    {
+                        Debug.LogWarning("PicoDialogue's llmCharacter is null. Attempting to re-initialize.");
+                        PicoDialogue.Instance.InitializeReferences();
+                    }
 
-                    Debug.Log($"PicoDialogue NPC data updated with agent '{agent.AgentName}', and chat history loaded.");
+                    if (PicoDialogue.Instance.llmCharacter != null)
+                    {
+                        // Assign llmCharacter from PicoDialogue to the agent
+                        agent.SetLLMCharacter(PicoDialogue.Instance.llmCharacter);
+
+                        // Set the agent in AIAgentInteraction
+                        agentInteraction.SetAIAgent(agent);
+
+                        // Update PicoDialogue with the current agent data
+                        PicoDialogue.Instance.SetAgentData(agent);
+
+                        // Load chat history for the newly spawned agent
+                        agent.llmCharacter.Load($"{agent.AgentId}_chatHistory");
+                        Debug.Log($"PicoDialogue NPC data updated with agent '{agent.AgentName}', and chat history loaded.");
+                    }
+                    else
+                    {
+                        Debug.LogError("PicoDialogue's llmCharacter is still null after re-initialization. Cannot assign LLMCharacter to agent.");
+                    }
                 }
                 else
                 {
-                    Debug.LogError("AIAgentManager: PicoDialogue instance is null.");
+                    Debug.LogError("PicoDialogue instance is null. Cannot assign LLMCharacter to agent.");
                 }
-
-                Debug.Log($"AI Agent '{agent.AgentName}' has been assigned to interaction and PicoDialogue updated.");
             }
             else
             {
@@ -224,12 +235,29 @@ public class AIAgentManager : MonoBehaviour
     }
 
 
-    public void SaveAgentData(AIAgent agent)
+
+    public async void SaveAgentData(AIAgent agent)
     {
-        // Combine all chat messages
-        string chatHistory = string.Join(" ", agent.llmCharacter.chat.Select(m => m.content));
-        memoryManager.EmbedChatHistory(chatHistory, agent.AgentId);
+        if (agent.llmCharacter.chat == null || agent.llmCharacter.chat.Count == 0)
+        {
+            Debug.LogWarning("No chat history to save.");
+            return;
+        }
+
+        foreach (var message in agent.llmCharacter.chat)
+        {
+            // Compare message.role to agent.llmCharacter.playerName
+            string sender = message.role == agent.llmCharacter.playerName ? "User" : agent.AgentName;
+            string messageContent = message.content;
+            string messageId = Guid.NewGuid().ToString();
+
+            var messageEntry = new MessageEntry(sender, messageContent, messageId);
+
+            await memoryManager.EmbedMessageAsync(messageEntry, agent.AgentId);
+        }
     }
+
+
 
     public void DespawnAllAgents()
     {

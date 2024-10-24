@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 using LLMUnity;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
 
 [System.Serializable]
 public class AIAgent
@@ -16,143 +17,148 @@ public class AIAgent
     public string Background { get; set; }
 
     // Stores user conversations
-    public Dictionary<string, List<string>> UserConversations { get; set; } // Key: userId
+    public Dictionary<string, List<MessageEntry>> UserConversations { get; set; }
+    private Dictionary<string, LLMCharacter> userCharacters = new Dictionary<string, LLMCharacter>();
+
 
     private LLMCharacterMemoryManager memoryManager;
+
+    // Maximum context length for the LLM model (adjust based on your model)
+    private const int MaxContextLength = 2048;
 
     public AIAgent(string agentId, string agentName, LLMCharacter character, string personality, string background, LLMCharacterMemoryManager memoryMgr)
     {
         AgentId = agentId;
         AgentName = agentName;
-        llmCharacter = character;
-        llmCharacter.AIName = AgentName; // Ensure AIName is set
+        llmCharacter = character ?? throw new ArgumentNullException(nameof(character), "llmCharacter cannot be null");
+        llmCharacter.AIName = "assistant"; // Standard role name
+        llmCharacter.playerName = "user"; // Standard role name
         Personality = personality;
         Background = background;
-        UserConversations = new Dictionary<string, List<string>>();
+        UserConversations = new Dictionary<string, List<MessageEntry>>();
+        userCharacters = new Dictionary<string, LLMCharacter>();
         memoryManager = memoryMgr ?? LLMCharacterMemoryManager.Instance;
 
         if (memoryManager == null)
         {
             Debug.LogError("AIAgent constructor: LLMCharacterMemoryManager instance is null.");
         }
+
         SetupSystemPrompt();
     }
 
     public void SetLLMCharacter(LLMCharacter character)
     {
-        llmCharacter = character;
-        llmCharacter.AIName = AgentName; // Set AIName to AgentName
+        llmCharacter = character ?? throw new ArgumentNullException(nameof(character), "llmCharacter cannot be null");
+        llmCharacter.AIName = "assistant"; // Standard role name
     }
 
     private void SetupSystemPrompt()
     {
-        if (isPromptSet)
-        {
-            return; // Skip if prompt is already set
-        }
-
-        string initialPrompt = $"You are {AgentName}, Your Personality Description is: {Personality}. Your Background Description is: {Background}. Below are some Chat History, If Any, And the USER INPUT. Reply to the User INPUT. Pay Attention to Chat History.";
-        llmCharacter.SetPrompt(initialPrompt);
-        isPromptSet = true; // Ensure this is only set once
+        // Set the system prompt for the LLMCharacter
+        string systemPrompt = $@"
+You are {AgentName}, an AI assistant with the following attributes:
+- Personality: {Personality}
+- Background: {Background}
+";
+        llmCharacter.SetPrompt(systemPrompt.Trim(), clearChat: true);
     }
+
 
     public async Task<string> Interact(string userId, string message)
     {
-        string lastPartialReply = "";
-        int previousLength = 0;
-
-        // Add user input to conversation history
-        AddToConversation(userId, $"User: {message}");
-
-        // Retrieve relevant context using RAGSearchUnity
-        string retrievedContext = RetrieveRelevantContext(message, userId);
-
-        // Check if context retrieval failed or was empty
-        if (retrievedContext == null)
+        // Ensure userCharacters is initialized
+        if (userCharacters == null)
         {
-            Debug.LogWarning("No relevant context found for the current interaction.");
-            retrievedContext = ""; // Use an empty context instead of null to avoid issues
+            userCharacters = new Dictionary<string, LLMCharacter>();
         }
 
-        // Construct prompt with chat history and retrieved context
-        string fullPrompt = ConstructConversationPromptWithEmbedding(userId, retrievedContext);
+        // Ensure llmCharacter is not null
+        if (llmCharacter == null)
+        {
+            Debug.LogError("llmCharacter is null. Ensure it is properly assigned before cloning.");
+            return "Error: AI agent is not properly initialized.";
+        }
 
-        // Log the constructed prompt
-        Debug.Log($"Constructed Prompt: {fullPrompt}");
+        // Ensure llmCharacter for the user
+        if (!userCharacters.ContainsKey(userId))
+        {
+            // Create a new instance for the user by cloning the existing llmCharacter
+            LLMCharacter userCharacter = UnityEngine.Object.Instantiate(llmCharacter);
+            userCharacter.AIName = "assistant";
+            userCharacter.playerName = "user";
+            userCharacter.SetPrompt(llmCharacter.prompt, clearChat: true);
+            userCharacters[userId] = userCharacter;
+        }
 
-        // Enable streaming and set stop tokens
-        llmCharacter.stream = true;
-        llmCharacter.stop = new List<string> { "\nUser:", "\n" + AgentName + ":" };
-        llmCharacter.ignoreEos = false;
-        llmCharacter.cachePrompt = false;
+        LLMCharacter userLlmCharacter = userCharacters[userId];
 
-        // Use Complete method to send the full prompt
-        await llmCharacter.Complete(fullPrompt,
-            partialReply =>
-            {
-                if (!string.IsNullOrEmpty(partialReply))
-                {
-                    // Extract only the new text since the last callback
-                    string newText = partialReply.Substring(previousLength);
-                    previousLength = partialReply.Length;
-
-                    // Append the new text to the lastPartialReply
-                    lastPartialReply += newText;
-                }
-            });
-
+        // Generate AI response
         string aiResponse = "";
-
-        if (!string.IsNullOrEmpty(lastPartialReply))
+        try
         {
-            // Clean the AI's response
-            aiResponse = lastPartialReply.Split(new[] { "\nUser:", "\n" + AgentName + ":" }, StringSplitOptions.None)[0].Trim();
-
-            // Add the AI's response to the conversation history
-            AddToConversation(userId, $"{AgentName}: {aiResponse}");
-
-            // Save the conversation in the SearchEngine
-            string conversation = string.Join("\n", UserConversations[userId]);
-            SaveConversation(conversation);
+            aiResponse = await userLlmCharacter.Chat(message);
         }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error during LLM chat: {ex.Message}");
+            return "Desculpe, ocorreu um erro ao processar sua solicitação.";
+        }
+
+        // Update UserConversations
+        if (!UserConversations.ContainsKey(userId))
+        {
+            UserConversations[userId] = new List<MessageEntry>();
+        }
+        UserConversations[userId].Add(new MessageEntry(userLlmCharacter.playerName, message, Guid.NewGuid().ToString()));
+        UserConversations[userId].Add(new MessageEntry(userLlmCharacter.AIName, aiResponse, Guid.NewGuid().ToString()));
 
         return aiResponse;
     }
 
-    // Retrieve relevant context using RAGSearchUnity
-    private string RetrieveRelevantContext(string query, string userId)
+
+
+
+
+
+
+    // Asynchronously retrieve relevant context
+    private async Task<string> RetrieveRelevantContextAsync(string query, string userId)
     {
-        // Use the memoryManager to search for relevant context
-        string retrievedContext = memoryManager?.SearchChatHistory(query, AgentId);
+        // Get recent messages to exclude
+        List<MessageEntry> recentMessages = GetRecentMessages(userId, excludeAI: false);
+        List<string> excludeMessages = recentMessages.Select(m => m.Message).ToList();
 
-        // Ensure retrievedContext is not null
-        if (retrievedContext == null)
+        // Retrieve multiple relevant contexts
+        string[] retrievedResults = await memoryManager?.SearchChatHistoryAsync(query, AgentId, 3, excludeMessages);
+
+        // Combine the retrieved contexts
+        string retrievedContext = "";
+        if (retrievedResults != null && retrievedResults.Length > 0)
         {
-            retrievedContext = ""; // Set to empty if no context is found
+            retrievedContext = string.Join("\n", retrievedResults).Trim();
+            Debug.Log($"Retrieved Context:\n{retrievedContext}");
         }
-
-        // Exclude recent chat history from retrieved context
-        if (UserConversations.ContainsKey(userId))
+        else
         {
-            var recentConversation = UserConversations[userId];
-            foreach (var entry in recentConversation)
-            {
-                retrievedContext = retrievedContext.Replace(entry, "");
-            }
+            Debug.Log("No relevant context found for the current interaction.");
         }
-
-        // Clean up any extra whitespace
-        retrievedContext = retrievedContext.Trim();
 
         return retrievedContext;
     }
 
-    private void SaveConversation(string conversation)
+    private async Task SaveConversationAsync(string userId)
     {
         // Use the memoryManager to embed and save the conversation
         if (memoryManager != null)
         {
-            memoryManager.EmbedChatHistory(conversation, AgentId);
+            List<MessageEntry> messagesToEmbed = GetRecentMessages(userId, excludeAI: false);
+
+            // Embed each message individually
+            foreach (var messageEntry in messagesToEmbed)
+            {
+                await memoryManager.EmbedMessageAsync(messageEntry, AgentId);
+            }
         }
         else
         {
@@ -160,52 +166,147 @@ public class AIAgent
         }
     }
 
-    public void AddToConversation(string userId, string message)
+    public void AddToConversation(string userId, MessageEntry messageEntry)
     {
         if (!UserConversations.ContainsKey(userId))
         {
-            UserConversations[userId] = new List<string>();
+            UserConversations[userId] = new List<MessageEntry>();
         }
-        UserConversations[userId].Add(message);
+        UserConversations[userId].Add(messageEntry);
     }
 
     private string ConstructConversationPromptWithEmbedding(string userId, string retrievedContext)
     {
-        // Limit conversation history to the last 5 messages (10 lines: User and AI)
-        string previousConversation = "";
+        // Limit conversation history to the last N messages
+        List<MessageEntry> recentConversation = GetRecentMessages(userId, maxMessages: 6);
+
+        // Build the conversation history string
+        StringBuilder conversationHistory = new StringBuilder();
+
+        // Build previous conversation pairs
+        for (int i = 0; i < recentConversation.Count - 1; i += 2)
+        {
+            var userMessage = recentConversation[i];
+            var assistantMessage = (i + 1) < recentConversation.Count ? recentConversation[i + 1] : null;
+
+            conversationHistory.AppendLine($"User: \"{userMessage.Message.Trim()}\"");
+            if (assistantMessage != null)
+            {
+                conversationHistory.AppendLine($"{AgentName}: \"{assistantMessage.Message.Trim()}\"");
+            }
+        }
+
+        // Get the last user message
+        var lastUserMessage = recentConversation.LastOrDefault(m => m.Sender == "User")?.Message.Trim();
+
+        // Build the prompt
+        string prompt = $@"
+You are {AgentName}, an AI assistant with the personality: {Personality}, and background: {Background}.
+You are engaging in a conversation with a user.
+
+{(string.IsNullOrEmpty(retrievedContext) ? "" : "Here is some relevant context:\n" + retrievedContext + "\n")}
+
+Conversation History:
+{conversationHistory}
+
+User: ""{lastUserMessage}""
+
+As {AgentName}, provide an appropriate response to the user's last message.
+
+Please respond in first person and do not include any conversation markers or role labels in your response.
+";
+
+        return prompt.Trim();
+    }
+
+    // Method to get recent messages
+    private List<MessageEntry> GetRecentMessages(string userId, int maxMessages = 10, bool excludeAI = false)
+    {
         if (UserConversations.ContainsKey(userId))
         {
             var conversationList = UserConversations[userId];
-            int maxLines = 10; // 5 messages * 2 lines (User and AI)
-            int startIndex = Math.Max(0, conversationList.Count - maxLines);
-            previousConversation = string.Join("\n", conversationList.GetRange(startIndex, conversationList.Count - startIndex));
-        }
+            if (excludeAI)
+            {
+                conversationList = conversationList.Where(m => m.Sender != AgentName).ToList();
+            }
 
-        // Remove overlap between retrievedContext and previousConversation
-        if (!string.IsNullOrEmpty(retrievedContext))
+            int startIndex = Math.Max(0, conversationList.Count - maxMessages);
+            return conversationList.GetRange(startIndex, conversationList.Count - startIndex);
+        }
+        return new List<MessageEntry>();
+    }
+
+    // Method to trim the prompt to fit within the model's context length
+    private string TrimPromptToMaxLength(string prompt, string userId)
+    {
+        int promptLength = prompt.Length;
+        if (promptLength <= MaxContextLength)
         {
-            // Split both texts into lines for comparison
-            var contextLines = retrievedContext.Split('\n').Select(line => line.Trim()).ToList();
-            var historyLines = previousConversation.Split('\n').Select(line => line.Trim()).ToList();
-
-            // Remove lines from context that are present in history
-            contextLines.RemoveAll(line => historyLines.Contains(line));
-
-            // Reconstruct the retrieved context without duplicates
-            retrievedContext = string.Join("\n", contextLines).Trim();
+            return prompt;
         }
 
-        string context = string.IsNullOrEmpty(retrievedContext) ? "" : $"\n\n*** Relevant Context ***\n{retrievedContext}";
+        // If the prompt is too long, remove older conversation history
+        string[] sections = prompt.Split(new[] { "Conversation History:" }, StringSplitOptions.None);
+        if (sections.Length < 2)
+        {
+            // Can't trim further
+            return prompt.Substring(prompt.Length - MaxContextLength);
+        }
 
-        // Construct the prompt
-        string prompt = $"You are {AgentName}, an AI assistant. Personality: {Personality}. Background: {Background}{context}\n\n*** Chat History ***\n{previousConversation}\n\n{AgentName}:";
+        if (!UserConversations.ContainsKey(userId) || UserConversations[userId].Count == 0)
+        {
+            // Handle the case where there are no conversations
+            return prompt.Substring(prompt.Length - MaxContextLength);
+        }
 
-        // Trim leading and trailing whitespace
-        prompt = prompt.Trim();
+        string header = sections[0];
+        string conversation = sections[1];
 
-        // Log the constructed prompt
-        Debug.Log($"Constructed Prompt: {prompt}");
+        string[] conversationLines = conversation.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        int linesToRemove = 0;
+
+        while (promptLength > MaxContextLength && linesToRemove < conversationLines.Length)
+        {
+            linesToRemove++;
+            string trimmedConversation = string.Join("\n", conversationLines.Skip(linesToRemove));
+
+            // Ensure userId is available here
+            prompt = $"{header}Conversation History:\n{trimmedConversation}\n\nUser: \"{UserConversations[userId].Last().Message.Trim()}\"\n\nAs {AgentName}, provide an appropriate response to the user's last message.\n\nPlease respond in first person and do not include any conversation markers or role labels in your response.";
+
+            promptLength = prompt.Length;
+        }
 
         return prompt;
+    }
+
+    // Post-process the AI's response to remove unwanted markers
+    private string PostProcessResponse(string response)
+    {
+        // Remove any unwanted tokens or markers
+        string[] unwantedMarkers = { "<|endoftext|>", "<|assistant|>", "<|user|>", "<|system|>" };
+        foreach (var marker in unwantedMarkers)
+        {
+            response = response.Replace(marker, "");
+        }
+
+        // Trim whitespace
+        response = response.Trim();
+
+        return response;
+    }
+}
+
+[System.Serializable]
+public class MessageEntry
+{
+    public string Sender;
+    public string Message;
+    public string MessageId;
+
+    public MessageEntry(string sender, string message, string messageId)
+    {
+        Sender = sender;
+        Message = message;
+        MessageId = messageId;
     }
 }

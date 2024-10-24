@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
 using LLMUnity;
-using UnityEngine.Networking; // For Android compatibility
+using UnityEngine.Networking;
 
 public static class SaveSystem
 {
@@ -14,7 +16,7 @@ public static class SaveSystem
         return path;
     }
 
-    public static void SaveAllAgents(List<AIAgent> agents)
+    public static async Task SaveAllAgentsAsync(List<AIAgent> agents)
     {
         if (agents == null || agents.Count == 0)
         {
@@ -22,19 +24,18 @@ public static class SaveSystem
             return;
         }
 
-        if (!Directory.Exists(path))
-        {
-            Directory.CreateDirectory(path);
-        }
-
         foreach (AIAgent agent in agents)
         {
-            SaveAgentData(agent);
+            await SaveAgentDataAsync(agent);
         }
+
+        await SaveManifestAsync(agents); // Save the manifest file
     }
 
-    public static void SaveAgentData(AIAgent agent)
+    public static async Task SaveAgentDataAsync(AIAgent agent)
     {
+        Directory.CreateDirectory(path);
+
         if (agent == null)
         {
             Debug.LogError("SaveAgentData called with null agent.");
@@ -47,18 +48,13 @@ public static class SaveSystem
             return;
         }
 
-        if (!Directory.Exists(path))
-        {
-            Directory.CreateDirectory(path);
-        }
-
         string filePath = Path.Combine(path, $"{agent.AgentId}.json");
 
         try
         {
             AIAgentData data = new AIAgentData(agent);
             string json = JsonConvert.SerializeObject(data, Formatting.Indented);
-            File.WriteAllText(filePath, json);
+            await WriteFileAsync(filePath, json);
             Debug.Log($"Agent data saved successfully to {filePath}.");
 
             // Save LLM chat history
@@ -74,41 +70,66 @@ public static class SaveSystem
         }
     }
 
-    public static List<AIAgent> LoadAllAgents()
+    public static async Task SaveManifestAsync(List<AIAgent> agents)
+    {
+        try
+        {
+            List<string> agentIds = agents.Select(agent => agent.AgentId).ToList();
+            string manifestPath = Path.Combine(path, "agent_manifest.json");
+            string json = JsonConvert.SerializeObject(agentIds, Formatting.Indented);
+            await WriteFileAsync(manifestPath, json);
+            Debug.Log("Agent manifest saved.");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to save agent manifest: {ex.Message}");
+        }
+    }
+
+    public static async Task<List<AIAgent>> LoadAllAgentsAsync()
     {
         List<AIAgent> agents = new List<AIAgent>();
 
-        if (!Directory.Exists(path))
+        string manifestPath = Path.Combine(path, "agent_manifest.json");
+
+        if (!FileExists(manifestPath))
         {
-            Debug.LogWarning($"Agent data directory '{path}' not found. No agents to load.");
+            Debug.LogWarning("No agent manifest found.");
             return agents;
         }
 
-        string[] files = Directory.GetFiles(path, "*.json");
-
-        foreach (string filePath in files)
+        try
         {
-            AIAgent agent = LoadAgentData(filePath);
-            if (agent != null)
+            string json = await ReadFileAsync(manifestPath);
+            List<string> agentIds = JsonConvert.DeserializeObject<List<string>>(json);
+            foreach (string agentId in agentIds)
             {
-                agents.Add(agent);
+                string filePath = Path.Combine(path, $"{agentId}.json");
+                AIAgent agent = await LoadAgentDataAsync(filePath);
+                if (agent != null)
+                {
+                    agents.Add(agent);
+                }
             }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to load agent manifest: {ex.Message}");
         }
 
         return agents;
     }
 
-    public static AIAgent LoadAgentData(string filePath)
+    public static async Task<AIAgent> LoadAgentDataAsync(string filePath)
     {
-        if (File.Exists(filePath))
+        if (FileExists(filePath))
         {
             try
             {
-                string json = ReadFile(filePath); // Use custom method for Android compatibility
+                string json = await ReadFileAsync(filePath);
                 AIAgentData data = JsonConvert.DeserializeObject<AIAgentData>(json);
                 if (data != null)
                 {
-                    // Replace Object.FindObjectOfType with PicoDialogue.Instance.llmCharacter
                     if (PicoDialogue.Instance == null || PicoDialogue.Instance.llmCharacter == null)
                     {
                         Debug.LogError("SaveSystem: PicoDialogue.Instance or its LLMCharacter is null.");
@@ -116,7 +137,7 @@ public static class SaveSystem
                     }
                     LLMCharacter llmCharacter = PicoDialogue.Instance.llmCharacter;
 
-                    LLMCharacterMemoryManager memoryManager = Object.FindObjectOfType<LLMCharacterMemoryManager>();
+                    LLMCharacterMemoryManager memoryManager = LLMCharacterMemoryManager.Instance;
 
                     if (memoryManager == null)
                     {
@@ -129,7 +150,10 @@ public static class SaveSystem
                         // Create a new AIAgent instance
                         AIAgent agent = new AIAgent(data.agentId, data.agentName, llmCharacter, data.personality, data.background, memoryManager);
 
-                        agent.UserConversations = data.userConversations;
+                        agent.UserConversations = data.userConversations.ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value
+                        );
 
                         // Load LLM chat history
                         agent.llmCharacter.Load($"{agent.AgentId}_chatHistory");
@@ -161,28 +185,60 @@ public static class SaveSystem
         return null;
     }
 
-    // Method to handle reading files, ensuring compatibility across platforms
-    private static string ReadFile(string filePath)
+    // Asynchronous method to handle reading files
+    private static async Task<string> ReadFileAsync(string filePath)
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
-        // For Android, use UnityWebRequest
-        string json = "";
         UnityWebRequest request = UnityWebRequest.Get("file://" + filePath);
-        request.SendWebRequest();
-        while (!request.isDone) { } // Wait for request to complete
+        await request.SendWebRequest();
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            json = request.downloadHandler.text;
+            return request.downloadHandler.text;
         }
         else
         {
             Debug.LogError($"Failed to load file at {filePath}: {request.error}");
+            return "";
         }
-        return json;
 #else
-        // For other platforms, use File.ReadAllText
-        return File.ReadAllText(filePath);
+        return await Task.Run(() => File.ReadAllText(filePath));
+#endif
+    }
+
+    // Asynchronous method to handle writing files
+    private static async Task WriteFileAsync(string filePath, string content)
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try
+        {
+            using (var file = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            {
+                using (var writer = new StreamWriter(file))
+                {
+                    await writer.WriteAsync(content);
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to write file at {filePath}: {ex.Message}");
+        }
+#else
+        await Task.Run(() => File.WriteAllText(filePath, content));
+#endif
+    }
+
+    // Method to check if a file exists, compatible with Android
+    private static bool FileExists(string filePath)
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        UnityWebRequest request = UnityWebRequest.Head("file://" + filePath);
+        request.SendWebRequest();
+        while (!request.isDone) { }
+        return !(request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.ConnectionError);
+#else
+        return File.Exists(filePath);
 #endif
     }
 }
@@ -194,7 +250,7 @@ public class AIAgentData
     public string agentName;
     public string personality;
     public string background;
-    public Dictionary<string, List<string>> userConversations;
+    public Dictionary<string, List<MessageEntry>> userConversations;
 
     public AIAgentData(AIAgent agent)
     {

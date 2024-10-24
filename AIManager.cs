@@ -1,6 +1,6 @@
-// AIManager.cs
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading.Tasks; 
 using LLMUnity;
 
 public class AIManager : MonoBehaviour
@@ -19,6 +19,7 @@ public class AIManager : MonoBehaviour
     }
 
     private Dictionary<string, AIAgent> aiAgents = new Dictionary<string, AIAgent>();
+    private bool agentsLoaded = false; // Flag to track whether agents have been loaded
 
     private void Awake()
     {
@@ -26,7 +27,11 @@ public class AIManager : MonoBehaviour
         {
             _instance = this;
             DontDestroyOnLoad(gameObject);
-            LoadAllAgents(); // Load agents when the game starts
+            if (!agentsLoaded) // Only load agents if they haven't been loaded already
+            {
+                LoadAllAgents();
+                agentsLoaded = true; // Set flag to true after loading
+            }
         }
         else if (_instance != this)
         {
@@ -34,6 +39,7 @@ public class AIManager : MonoBehaviour
         }
     }
 
+    // Register an AI Agent into the system
     public void RegisterAIAgent(AIAgent agent)
     {
         if (agent == null)
@@ -53,11 +59,19 @@ public class AIManager : MonoBehaviour
         }
     }
 
+    // Return a list of all AI Agent names
     public List<string> GetAllAgentNames()
     {
         return new List<string>(aiAgents.Keys);
     }
 
+    // Return all registered agents
+    public List<AIAgent> GetAllAgents() // Method to get all registered agents
+    {
+        return new List<AIAgent>(aiAgents.Values);
+    }
+
+    // Return an AI Agent by name
     public AIAgent GetAIAgentByName(string name)
     {
         if (string.IsNullOrEmpty(name))
@@ -77,27 +91,35 @@ public class AIManager : MonoBehaviour
         }
     }
 
-    public void LoadAllAgents()
+    // Load all agents from saved data
+    public async void LoadAllAgents()
     {
-        List<AIAgent> agents = SaveSystem.LoadAllAgents();
+        if (agentsLoaded)
+        {
+            Debug.Log("Agents already loaded. Skipping redundant load.");
+            return; // Prevent redundant loading
+        }
+
+        List<AIAgent> agents = await SaveSystem.LoadAllAgentsAsync();
+
         foreach (AIAgent agent in agents)
         {
             if (PicoDialogue.Instance != null && PicoDialogue.Instance.llmCharacter != null)
             {
                 agent.SetLLMCharacter(PicoDialogue.Instance.llmCharacter);
-                // Load chat history
                 agent.llmCharacter.Load($"{agent.AgentId}_chatHistory");
                 Debug.Log($"Chat history loaded for agent '{agent.AgentName}'.");
             }
             else
             {
                 Debug.LogError("AIManager: PicoDialogue.Instance or its LLMCharacter is null.");
-                continue; // Skip registering this agent
+                continue;
             }
 
             RegisterAIAgent(agent);
             Debug.Log($"Loaded AI Agent '{agent.AgentName}' with chat history.");
         }
-    }
 
+        agentsLoaded = true; // Set flag to true after loading
+    }
 }
