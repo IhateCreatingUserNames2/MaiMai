@@ -41,17 +41,12 @@ This project demonstrates an AI-driven NPC interaction system using a combinatio
 
 ## Setup Instructions
 
-1. **Unity Version**: Ensure you're using a version of Unity that supports the necessary UI and AI components.
-
-2. **Dependencies**:
-   - Install necessary packages for AI handling (LLMUnity, Photon, etc.).
-   - Ensure the `LLMCharacterMemoryManager` is present in the scene for memory management.
-
-3. **Model Integration**:
-   - Configure the `ModelSelector` with available LLM models using the provided UI to dynamically switch models for agents.
-
-4. **Prefab Setup**:
-   - Ensure the `AiAgentInteraction` and `AiManager` components are part of the NPC prefab to handle interactions and spawning correctly.
+1. Download Files, put inside your Project
+2. Create GameObjects and Link the Components
+3. configure fields in inspector , check all GameObjects. 
+4. add AiAgentInteraction.cs component to NPC PreFab
+5. Create UI
+6. Create new AI Agent in Game and Spawn it
 
 ---
 
