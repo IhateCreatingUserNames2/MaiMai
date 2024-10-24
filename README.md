@@ -4,6 +4,8 @@ This requires: LLMUnity and RagSearchUnity Imported
 https://github.com/undreamai/LLMUnity
 https://github.com/undreamai/RAGSearchUnity
 
+read https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/Readme2 
+
 
 This project is focused on creating an NPC interaction system in Unity using the **LLMUnity** framework. The system allows NPCs to interact with players through AI-driven dialogue, memory management, and context-based responses.
 
