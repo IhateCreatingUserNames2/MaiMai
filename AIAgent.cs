@@ -16,6 +16,8 @@ public class AIAgent
     public string Personality { get; set; }
     public string Background { get; set; }
 
+    private string systemPrompt;
+
     // Stores user conversations
     public Dictionary<string, List<MessageEntry>> UserConversations { get; set; }
     private Dictionary<string, LLMCharacter> userCharacters = new Dictionary<string, LLMCharacter>();
@@ -24,6 +26,7 @@ public class AIAgent
     public LLMCharacterMemoryManager memoryManager;
 
     private const int MaxContextLength = 2048;
+
 
     public AIAgent(string agentId, string agentName, LLMCharacter character, string personality, string background, LLMCharacterMemoryManager memoryMgr)
     {
@@ -52,15 +55,42 @@ public class AIAgent
         llmCharacter.AIName = "assistant"; // Standard role name
     }
 
-    private void SetupSystemPrompt()
+
+    public void SetupSystemPrompt()
     {
-        string systemPrompt = $@"
-You are {AgentName}, an AI assistant with the following attributes:
-- Personality: {Personality}
-- Background: {Background}
+        systemPrompt = $@"
+You are now embodying the character **{AgentName}**. Your role is to interact with users as **{AgentName}**, adhering strictly to the following guidelines:
+
+**Personality Traits**:
+{Personality}
+
+**Background Story**:
+{Background}
+
+**Communication Style**:
+- Speak in the first person singular.
+- Maintain a consistent tone that reflects your personality.
+- Be immersive and stay in character throughout the conversation.
+- Avoid revealing that you are an AI language model.
+
+**Instructions**:
+- Always respond as {AgentName} would.
+- Use knowledge from your background to inform your responses.
+- If unsure about a topic, respond in a way that {AgentName} would naturally react.
+
+Begin the interaction below.
 ";
+
+        // Set the prompt in the llmCharacter
         llmCharacter.SetPrompt(systemPrompt.Trim(), clearChat: true);
+
+        Debug.Log($"System Prompt Set for {AgentName} with Personality and Background: \n{systemPrompt}");
     }
+
+
+    
+
+
 
     public async Task<string> Interact(string userId, string message)
     {
@@ -80,7 +110,11 @@ You are {AgentName}, an AI assistant with the following attributes:
             LLMCharacter userCharacter = UnityEngine.Object.Instantiate(llmCharacter);
             userCharacter.AIName = "assistant";
             userCharacter.playerName = "user";
-            userCharacter.SetPrompt(llmCharacter.prompt, clearChat: true);
+            userCharacter.debugPrompt = true;
+
+            // Set the custom prompt
+            userCharacter.SetPrompt(systemPrompt.Trim(), clearChat: true);
+
             userCharacters[userId] = userCharacter;
         }
 
@@ -174,17 +208,18 @@ You are {AgentName}, an AI assistant with the following attributes:
             : $"Here is some relevant context:\n{retrievedContext}\n\n";
 
         string prompt =
-            $"You are {AgentName}, an AI assistant with the personality: {Personality}, and background: {Background}.\n" +
-            "You are engaging in a conversation with a user.\n\n" +
+            $"You are {AgentName}, an AI assistant with the personality: {Personality} and background: {Background}. You are engaging in a conversation with a user.\n\n" +
             $"{contextSection}" +
             "Conversation History:\n" +
             $"{conversationHistory}\n\n" +
             $"User: \"{lastUserMessage}\"\n\n" +
-            $"As {AgentName}, provide an appropriate response to the user's last message.\n\n" +
-            "Please respond in first person and do not include any conversation markers or role labels in your response.";
+            $"As {AgentName} ({Background}), please provide an appropriate response to the user's last message.\n\n" +
+            "Respond in first person and do not include any conversation markers or role labels in your response.";
 
         return prompt.Trim();
     }
+
+
 
 
 

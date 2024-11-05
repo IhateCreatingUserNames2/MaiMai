@@ -83,27 +83,13 @@ public class AgentCreateUI : MonoBehaviour
             return;
         }
 
-        // Set the AIName to the agent's name
         llmCharacter.AIName = agentName;
+        llmCharacter.playerName = GetPlayerName();
 
-        // Retrieve the player's name
-        string playerName = GetPlayerName();
-        if (string.IsNullOrEmpty(playerName))
-        {
-            Debug.LogWarning("Player name could not be retrieved. Using default name 'Player'.");
-            playerName = "Player";
-        }
-
-        llmCharacter.playerName = playerName;
-
-        // Create a new instance of LLMCharacter for the agent to avoid shared state
         LLMCharacter agentLLMCharacter = Instantiate(llmCharacter);
         agentLLMCharacter.AIName = agentName;
-        agentLLMCharacter.playerName = playerName;
-        agentLLMCharacter.prompt = llmCharacter.prompt;
-        agentLLMCharacter.llm = llmCharacter.llm; // Reference the existing LLM instance
+        agentLLMCharacter.playerName = llmCharacter.playerName;
 
-        // Create new agent with personality and background
         AIAgent newAgent = new AIAgent(
             System.Guid.NewGuid().ToString(),
             agentName,
@@ -113,17 +99,16 @@ public class AgentCreateUI : MonoBehaviour
             memoryManager
         );
 
-        // Register the agent in AIManager
+        // Explicitly call SetupSystemPrompt and check if it applies correctly
+        newAgent.SetupSystemPrompt();
+
+        Debug.Log($"Agent Created - Name: {newAgent.AgentName}, Personality: {newAgent.Personality}, Background: {newAgent.Background}");
+
         if (AIManager.Instance != null)
         {
             AIManager.Instance.RegisterAIAgent(newAgent);
         }
-        else
-        {
-            Debug.LogError("AIManager instance is not available.");
-        }
 
-        // Save the agent data immediately
         await SaveSystem.SaveAgentDataAsync(newAgent);
         await SaveSystem.SaveManifestAsync(AIManager.Instance.GetAllAgents());
 
@@ -131,13 +116,8 @@ public class AgentCreateUI : MonoBehaviour
         {
             aiButtonController.PopulateDropdown();
         }
-        else
-        {
-            Debug.LogError("AIAgentManager is not assigned.");
-        }
-
-        ClearInputFields();
     }
+
 
     private string GetPlayerName()
     {
