@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Newtonsoft.Json;
 using LLMUnity;
-using UnityEngine.Networking;
+using System.Runtime.CompilerServices;
 
 public static class SaveSystem
 {
@@ -52,6 +52,7 @@ public static class SaveSystem
 
         try
         {
+            // Save agent's basic data
             AIAgentData data = new AIAgentData(agent);
             string json = JsonConvert.SerializeObject(data, Formatting.Indented);
             await WriteFileAsync(filePath, json);
@@ -63,12 +64,21 @@ public static class SaveSystem
                 agent.llmCharacter.Save($"{agent.AgentId}_chatHistory");
                 Debug.Log($"Chat history saved for {agent.AgentId}.");
             }
+
+            // Save the RAG state
+            if (agent.memoryManager != null && agent.memoryManager.rag != null)
+            {
+                // Call Save without await
+                agent.memoryManager.rag.Save($"{agent.AgentId}_ragState");
+                Debug.Log($"RAG state saved for agent '{agent.AgentId}'.");
+            }
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"Failed to save agent data: {ex.Message}");
         }
     }
+
 
     public static async Task SaveManifestAsync(List<AIAgent> agents)
     {
@@ -156,11 +166,18 @@ public static class SaveSystem
                         );
 
                         // Load LLM chat history
-                        agent.llmCharacter.Load($"{agent.AgentId}_chatHistory");
+                        await agent.llmCharacter.Load($"{agent.AgentId}_chatHistory");
                         Debug.Log($"Chat history loaded for {agent.AgentId}.");
 
-                        Debug.Log($"Agent data loaded successfully from {filePath}.");
+                        // Load the RAG state
+                        if (agent.memoryManager != null && agent.memoryManager.rag != null)
+                        {
+                            // Call Load without await
+                            agent.memoryManager.rag.Load($"{agent.AgentId}_ragState");
+                            Debug.Log($"RAG state loaded for agent '{agent.AgentId}'.");
+                        }
 
+                        Debug.Log($"Agent data loaded successfully from {filePath}.");
                         return agent;
                     }
                     else
@@ -185,61 +202,23 @@ public static class SaveSystem
         return null;
     }
 
+
     // Asynchronous method to handle reading files
     private static async Task<string> ReadFileAsync(string filePath)
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        UnityWebRequest request = UnityWebRequest.Get("file://" + filePath);
-        await request.SendWebRequest();
-
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            return request.downloadHandler.text;
-        }
-        else
-        {
-            Debug.LogError($"Failed to load file at {filePath}: {request.error}");
-            return "";
-        }
-#else
         return await Task.Run(() => File.ReadAllText(filePath));
-#endif
     }
 
     // Asynchronous method to handle writing files
     private static async Task WriteFileAsync(string filePath, string content)
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        try
-        {
-            using (var file = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-            {
-                using (var writer = new StreamWriter(file))
-                {
-                    await writer.WriteAsync(content);
-                }
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Failed to write file at {filePath}: {ex.Message}");
-        }
-#else
         await Task.Run(() => File.WriteAllText(filePath, content));
-#endif
     }
 
-    // Method to check if a file exists, compatible with Android
+    // Method to check if a file exists
     private static bool FileExists(string filePath)
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        UnityWebRequest request = UnityWebRequest.Head("file://" + filePath);
-        request.SendWebRequest();
-        while (!request.isDone) { }
-        return !(request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.ConnectionError);
-#else
         return File.Exists(filePath);
-#endif
     }
 }
 

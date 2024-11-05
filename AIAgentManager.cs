@@ -1,4 +1,3 @@
-// AIAgentManager.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -6,12 +5,9 @@ using System.Collections.Generic;
 using System.Collections;
 using LLMUnity;
 using System;
-using RAGSearchUnity;
-using System.Linq;
 
 public class AIAgentManager : MonoBehaviour
 {
-    public Embedding embeddingModel;
     public LLMCharacterMemoryManager memoryManager;
 
     [Header("UI Elements")]
@@ -21,7 +17,6 @@ public class AIAgentManager : MonoBehaviour
     public GameObject aiPrefab;
 
     private List<GameObject> spawnedAgents = new List<GameObject>(); // List to track spawned AI agents
-
 
     private void Awake()
     {
@@ -39,20 +34,16 @@ public class AIAgentManager : MonoBehaviour
         }
     }
 
-
     private void Start()
     {
-        // Dynamically assign LLMCharacterMemoryManager if not assigned
-        // If memoryManager is not assigned, dynamically find or create it
         if (LLMCharacterMemoryManager.Instance == null)
         {
-            // This block is only for testing in the Unity Editor when starting directly from the Map Scene
 #if UNITY_EDITOR
             Debug.LogWarning("LLMCharacterMemoryManager not found. Creating a new instance for testing.");
             GameObject memoryManagerGO = new GameObject("LLMCharacterMemoryManager");
             memoryManager = memoryManagerGO.AddComponent<LLMCharacterMemoryManager>();
 #else
-        Debug.LogError("LLMCharacterMemoryManager not found. Ensure the Main Menu scene is loaded first.");
+            Debug.LogError("LLMCharacterMemoryManager not found. Ensure the Main Menu scene is loaded first.");
 #endif
         }
         else
@@ -65,15 +56,9 @@ public class AIAgentManager : MonoBehaviour
             Debug.Log("LLMCharacterMemoryManager successfully assigned.");
         }
 
-
-        if (embeddingModel != null && memoryManager != null)
-        {
-            memoryManager.embeddingModel = embeddingModel; // Ensure embedding model is linked
-        }
-
         if (selectAIButton != null)
         {
-            selectAIButton.interactable = true; // Ensure the button is interactable
+            selectAIButton.interactable = true;
             selectAIButton.onClick.AddListener(OnSelectAIClicked);
         }
         else
@@ -93,7 +78,6 @@ public class AIAgentManager : MonoBehaviour
 
         PopulateDropdown();
     }
-
 
     public void PopulateDropdown()
     {
@@ -118,7 +102,6 @@ public class AIAgentManager : MonoBehaviour
 
             Debug.Log($"Selected agent from dropdown: '{selectedAgent}'");
 
-            // Try to spawn the AI agent
             if (!string.IsNullOrEmpty(selectedAgent))
             {
                 SpawnAI(selectedAgent);
@@ -142,7 +125,6 @@ public class AIAgentManager : MonoBehaviour
             return;
         }
 
-        // Check if an agent with this name already exists in the scene
         GameObject existingAgent = GameObject.Find(agentName);
         if (existingAgent != null)
         {
@@ -183,13 +165,10 @@ public class AIAgentManager : MonoBehaviour
             AIAgent agent = AIManager.Instance.GetAIAgentByName(agentName);
             if (agent != null)
             {
-                // Ensure llmCharacter is assigned
                 if (PicoDialogue.Instance != null)
                 {
-                    // Re-initialize PicoDialogue references
                     PicoDialogue.Instance.InitializeReferences();
 
-                    // Check if llmCharacter is assigned, re-initialize if necessary
                     if (PicoDialogue.Instance.llmCharacter == null)
                     {
                         Debug.LogWarning("PicoDialogue's llmCharacter is null. Attempting to re-initialize.");
@@ -198,16 +177,10 @@ public class AIAgentManager : MonoBehaviour
 
                     if (PicoDialogue.Instance.llmCharacter != null)
                     {
-                        // Assign llmCharacter from PicoDialogue to the agent
                         agent.SetLLMCharacter(PicoDialogue.Instance.llmCharacter);
-
-                        // Set the agent in AIAgentInteraction
                         agentInteraction.SetAIAgent(agent);
 
-                        // Update PicoDialogue with the current agent data
                         PicoDialogue.Instance.SetAgentData(agent);
-
-                        // Load chat history for the newly spawned agent
                         agent.llmCharacter.Load($"{agent.AgentId}_chatHistory");
                         Debug.Log($"PicoDialogue NPC data updated with agent '{agent.AgentName}', and chat history loaded.");
                     }
@@ -234,8 +207,6 @@ public class AIAgentManager : MonoBehaviour
         spawnedAgents.Add(spawnedAI);
     }
 
-
-
     public async void SaveAgentData(AIAgent agent)
     {
         if (agent.llmCharacter.chat == null || agent.llmCharacter.chat.Count == 0)
@@ -246,7 +217,6 @@ public class AIAgentManager : MonoBehaviour
 
         foreach (var message in agent.llmCharacter.chat)
         {
-            // Compare message.role to agent.llmCharacter.playerName
             string sender = message.role == agent.llmCharacter.playerName ? "User" : agent.AgentName;
             string messageContent = message.content;
             string messageId = Guid.NewGuid().ToString();
@@ -256,8 +226,6 @@ public class AIAgentManager : MonoBehaviour
             await memoryManager.EmbedMessageAsync(messageEntry, agent.AgentId);
         }
     }
-
-
 
     public void DespawnAllAgents()
     {
@@ -269,6 +237,6 @@ public class AIAgentManager : MonoBehaviour
                 Destroy(agent);
             }
         }
-        spawnedAgents.Clear(); // Clear the list after despawning all agents
+        spawnedAgents.Clear();
     }
 }

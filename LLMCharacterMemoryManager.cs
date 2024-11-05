@@ -1,19 +1,13 @@
-using RAGSearchUnity;
+using LLMUnity;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-using System.Linq;
-using LLMUnity;
-using Unity.Sentis;
-using System.Collections;
 
 public class LLMCharacterMemoryManager : MonoBehaviour
 {
     public static LLMCharacterMemoryManager Instance { get; private set; }
-
-    public Embedding embeddingModel;
-    private SearchEngine searchEngine;
+    public RAG rag;
 
     private Dictionary<string, HashSet<string>> embeddedMessageIds = new Dictionary<string, HashSet<string>>();
 
@@ -33,132 +27,49 @@ public class LLMCharacterMemoryManager : MonoBehaviour
 
     private void Start()
     {
-        // Start a coroutine to initialize the search engine
-        StartCoroutine(InitializeSearchEngineCoroutine());
+        InitializeRAG();
     }
 
-    private IEnumerator InitializeSearchEngineCoroutine()
+    private void InitializeRAG()
     {
-        // Wait until the embedding model is ready
-        while (embeddingModel == null || embeddingModel.GetModel() == null)
-        {
-            Debug.Log("LLMCharacterMemoryManager: Waiting for embedding model to be ready...");
-            yield return null; // Wait for the next frame
-        }
-
-        // Now initialize the search engine
-        EmbeddingModel model = embeddingModel.GetModel();
         try
         {
-            searchEngine = new SearchEngine(model);
-            Debug.Log("LLMCharacterMemoryManager: SearchEngine initialized successfully.");
+            rag = gameObject.AddComponent<RAG>();
+            rag.Init(SearchMethods.DBSearch, ChunkingMethods.SentenceSplitter);
+            Debug.Log("LLMCharacterMemoryManager: RAG initialized successfully.");
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"LLMCharacterMemoryManager: Failed to initialize SearchEngine. Exception: {ex.Message}");
+            Debug.LogError($"LLMCharacterMemoryManager: Failed to initialize RAG. Exception: {ex.Message}");
         }
     }
 
     public async Task EmbedMessageAsync(MessageEntry messageEntry, string agentId)
     {
-        // Wait until searchEngine is initialized
-        while (searchEngine == null)
+        if (rag != null)
         {
-            await Task.Yield();
-        }
-
-        if (embeddingModel != null)
-        {
-            if (searchEngine != null)
+            if (!IsMessageEmbedded(agentId, messageEntry.MessageId))
             {
-                if (!IsMessageEmbedded(agentId, messageEntry.MessageId))
-                {
-                    // Asynchronously embed the message
-                    await Task.Run(() => searchEngine.Add(messageEntry.Message));
-                    await SaveSearchEngineAsync(agentId);
-
-                    // Mark the message as embedded
-                    MarkMessageAsEmbedded(agentId, messageEntry.MessageId);
-                    Debug.Log($"Message embedded for agent '{agentId}': {messageEntry.Message}");
-                }
-                else
-                {
-                    Debug.Log("Message already embedded. Skipping duplication.");
-                }
+                await rag.Add(messageEntry.Message);
+                MarkMessageAsEmbedded(agentId, messageEntry.MessageId);
+                Debug.Log($"Message embedded in RAG for agent '{agentId}': {messageEntry.Message}");
             }
             else
             {
-                Debug.LogError("LLMCharacterMemoryManager: Search engine initialization failed.");
+                Debug.Log("Message already embedded. Skipping duplication.");
             }
         }
         else
         {
-            Debug.LogError("Embedding model is not assigned.");
+            Debug.LogError("RAG is not initialized.");
         }
     }
 
-    public void LoadSearchEngine(string agentId)
+    public async Task<string[]> SearchChatHistoryAsync(string query, int resultCount = 3, List<string> excludeMessages = null)
     {
-        if (embeddingModel == null || embeddingModel.GetModel() == null)
+        if (rag != null)
         {
-            Debug.LogError("LLMCharacterMemoryManager: Embedding model is not ready. Cannot load search engine.");
-            return;
-        }
-
-        EmbeddingModel model = embeddingModel.GetModel();
-        string embeddingFilePath = GetEmbeddingFilePath(agentId);
-
-        if (File.Exists(embeddingFilePath))
-        {
-            try
-            {
-                searchEngine = SearchEngine.Load(model, embeddingFilePath);
-                Debug.Log($"Loaded embeddings for agent '{agentId}' from '{embeddingFilePath}'.");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"LLMCharacterMemoryManager: Failed to load embeddings for agent '{agentId}'. Exception: {ex.Message}");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"No embeddings found for agent '{agentId}'. Starting with an empty search engine.");
-            try
-            {
-                searchEngine = new SearchEngine(model);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"LLMCharacterMemoryManager: Failed to initialize SearchEngine. Exception: {ex.Message}");
-            }
-        }
-    }
-
-    public async Task SaveSearchEngineAsync(string agentId)
-    {
-        if (searchEngine != null)
-        {
-            string embeddingFilePath = GetEmbeddingFilePath(agentId);
-            await Task.Run(() => searchEngine.Save(embeddingFilePath));
-            Debug.Log($"Saved embeddings for agent '{agentId}' to '{embeddingFilePath}'.");
-        }
-        else
-        {
-            Debug.LogError("LLMCharacterMemoryManager: Cannot save embeddings. Search engine is not initialized.");
-        }
-    }
-
-    public async Task<string[]> SearchChatHistoryAsync(string query, string agentId, int resultCount = 3, List<string> excludeMessages = null)
-    {
-        // Wait until searchEngine is initialized
-        while (searchEngine == null)
-        {
-            await Task.Yield();
-        }
-
-        if (searchEngine != null)
-        {
-            string[] results = await Task.Run(() => searchEngine.Search(query, resultCount));
+            (string[] results, float[] distances) = await rag.Search(query, resultCount);
 
             // Exclude recent messages based on message content
             if (excludeMessages != null && excludeMessages.Count > 0)
@@ -170,9 +81,8 @@ public class LLMCharacterMemoryManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("LLMCharacterMemoryManager: Search engine is not initialized. Cannot perform search.");
+            Debug.LogError("RAG is not initialized. Cannot perform search.");
         }
-
         return new string[0];
     }
 
@@ -182,10 +92,7 @@ public class LLMCharacterMemoryManager : MonoBehaviour
         {
             return messageIds.Contains(messageId);
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     private void MarkMessageAsEmbedded(string agentId, string messageId)
@@ -195,10 +102,5 @@ public class LLMCharacterMemoryManager : MonoBehaviour
             embeddedMessageIds[agentId] = new HashSet<string>();
         }
         embeddedMessageIds[agentId].Add(messageId);
-    }
-
-    private string GetEmbeddingFilePath(string agentId)
-    {
-        return Path.Combine(Application.persistentDataPath, $"{agentId}_embeddings.json");
     }
 }
