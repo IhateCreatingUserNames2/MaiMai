@@ -59,7 +59,7 @@ public class AIAgent
     public void SetupSystemPrompt()
     {
         systemPrompt = $@"
-You are now embodying the character **{AgentName}**. Your role is to interact with users as **{AgentName}**, adhering strictly to the following guidelines:
+You are now embodying the character **{AgentName}**. Your role is to interact with users, adhering strictly to the following guidelines:
 
 **Personality Traits**:
 {Personality}
