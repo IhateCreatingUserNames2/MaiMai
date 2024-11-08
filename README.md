@@ -11,6 +11,17 @@ read https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/Readme2
 
 This project is focused on creating an NPC interaction system in Unity using the **LLMUnity** framework. The system allows NPCs to interact with players through AI-driven dialogue, memory management, and context-based responses.
 
+
+
+
+//Custom prompt///
+
+
+Custom prompt Removes Personality and Background, it uses Agent Name for data retrieval. It has only CUstom Prompt as a field to personalize the agent. In this setup the Setup prompt = Custom Prompt.
+
+
+
+// Custom Prompt///
 ## Key Components
 
 ### **AIAgent.cs**
