@@ -1,35 +1,81 @@
 using UnityEngine;
 using Puerts;
+using LLMUnity;
+using System.Threading.Tasks;
 
-public class InitializePuerts : MonoBehaviour
+
+namespace MFPS.Scripts
 {
-    private JsEnv jsEnv;
-
-    void Start()
+    public class InitializePuerts : MonoBehaviour
     {
-        try
+        private JsEnv jsEnv;
+        public LLMCharacter llmCharacter;
+
+        // Singleton Instance
+        public static InitializePuerts Instance { get; private set; }
+
+        void Awake()
         {
-            Debug.Log("Initializing PuerTS environment...");
-            jsEnv = new JsEnv(new CustomLoader(), 9229);
-
-            // Execute the testLangGraph module
-            jsEnv.ExecuteModule("testLangGraph.mjs");
-
-            Debug.Log("PuerTS environment initialized successfully!");
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
-        catch (System.Exception e)
+
+        void Start()
         {
-            Debug.LogError($"Failed to initialize PuerTS: {e}");
+            try
+            {
+                Debug.Log("Initializing PuerTS environment...");
+                jsEnv = new JsEnv();
+
+                // Execute the testLangGraph module to test the PuerTS setup
+                jsEnv.ExecuteModule("testLangGraph.mjs");
+
+                Debug.Log("PuerTS environment initialized successfully!");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to initialize PuerTS: {e}");
+            }
         }
-    }
 
-    void Update()
-    {
-        jsEnv?.Tick();
-    }
+        void Update()
+        {
+            jsEnv?.Tick();
+        }
 
-    private void OnDestroy()
-    {
-        jsEnv?.Dispose();
+        private void OnDestroy()
+        {
+            jsEnv?.Dispose();
+            if (Instance == this) Instance = null;
+        }
+
+        // Public method to receive messages from JavaScript and call LLMCharacter.Chat
+        public void SendMessageToLLMCharacter(string message)
+        {
+            if (llmCharacter == null)
+            {
+                Debug.LogError("LLMCharacter is not assigned.");
+                return;
+            }
+
+            // Call Chat on the LLMCharacter and log the result asynchronously
+            llmCharacter.Chat(message).ContinueWith(task =>
+            {
+                if (task.IsCompletedSuccessfully)
+                {
+                    Debug.Log($"LLM response: {task.Result}");
+                }
+                else
+                {
+                    Debug.LogError("Error calling LLMCharacter.Chat");
+                }
+            });
+        }
     }
 }

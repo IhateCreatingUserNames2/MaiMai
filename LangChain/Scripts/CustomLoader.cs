@@ -5,6 +5,14 @@ using UnityEngine;
 
 public class CustomLoader : ILoader
 {
+
+    private readonly string basePath;
+
+    public CustomLoader(string basePath)
+    {
+        this.basePath = basePath;
+    }
+
     public bool FileExists(string filepath)
     {
         string resourcePath = NormalizeResourcePath(filepath);
