@@ -1,0 +1,166 @@
+LangGraph Integration with Unity using PuerTS
+This repository provides a guide for integrating LangGraph.js with Unity using PuerTS, enabling Unity developers to use LangGraph for building multi-agent systems or agent-based workflows.
+
+Prerequisites
+Unity (version supporting PuerTS, ideally 2019.4 or higher)
+PuerTS installed in Unity
+Node.js (for bundling LangGraph and related dependencies with Webpack)
+Webpack and Babel for handling JavaScript and TypeScript polyfills
+Setup Guide
+1. Install Dependencies
+Install LangGraph and other necessary dependencies.
+bash
+Copy code
+npm install @langchain/langgraph web-streams-polyfill crypto-browserify
+Set up Webpack and Babel for building LangGraph with polyfills.
+bash
+Copy code
+npm install --save-dev webpack webpack-cli babel-loader @babel/core @babel/preset-env @babel/preset-typescript
+2. Configure Webpack
+Create a webpack.config.js file to bundle LangGraph with necessary polyfills:
+
+javascript
+Copy code
+const path = require('path');
+const webpack = require('webpack');
+
+module.exports = {
+  mode: 'production',
+  entry: './src/index.ts',
+  output: {
+    filename: 'langgraph.bundle.mjs',
+    path: path.resolve(__dirname, 'dist'),
+    libraryTarget: 'module',
+  },
+  experiments: { outputModule: true },
+  target: 'web',
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', '@babel/preset-typescript'],
+          },
+        },
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+    alias: {
+      'web-streams-polyfill/ponyfill': path.resolve(__dirname, 'node_modules/web-streams-polyfill/dist/ponyfill.mjs')
+    },
+    fallback: {
+      'node:async_hooks': false,
+      fs: false,
+      net: false,
+      tls: false,
+    },
+  },
+  plugins: [
+    new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify('production') }),
+    new webpack.ProvidePlugin({
+      ReadableStream: ['web-streams-polyfill/ponyfill', 'ReadableStream'],
+      WritableStream: ['web-streams-polyfill/ponyfill', 'WritableStream'],
+      TransformStream: ['web-streams-polyfill/ponyfill', 'TransformStream'],
+      ByteLengthQueuingStrategy: ['web-streams-polyfill/ponyfill', 'ByteLengthQueuingStrategy'],
+      CountQueuingStrategy: ['web-streams-polyfill/ponyfill', 'CountQueuingStrategy'],
+    }),
+  ],
+};
+3. Create LangGraph Entry (src/index.ts)
+Configure LangGraph's state and nodes in src/index.ts:
+
+typescript
+Copy code
+import * as streams from 'web-streams-polyfill/ponyfill';
+import crypto from 'crypto-browserify';
+
+if (typeof globalThis.crypto === 'undefined') {
+  globalThis.crypto = {
+    getRandomValues: (arr) => {
+      for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+      return arr;
+    },
+  };
+}
+
+(globalThis as any).ReadableStream = streams.ReadableStream;
+(globalThis as any).WritableStream = streams.WritableStream;
+
+import { StateGraph, START, END, Annotation } from '@langchain/langgraph/web';
+import { BaseMessage, HumanMessage } from '@langchain/core/messages';
+
+const GraphState = Annotation.Root({
+  messages: Annotation<BaseMessage[]>({ reducer: (x, y) => x.concat(y) }),
+});
+
+const nodeFn = async (_state) => {
+  return { messages: [new HumanMessage('Hello from Unity!')] };
+};
+
+const workflow = new StateGraph(GraphState)
+  .addNode('node', nodeFn)
+  .addEdge(START, 'node')
+  .addEdge('node', END);
+
+export const app = workflow.compile({});
+4. Build and Export the LangGraph Bundle
+Run Webpack to create the bundled file:
+
+bash
+Copy code
+npx webpack
+Move the langgraph.bundle.mjs file to Unity’s Assets/Resources folder.
+
+5. Integrate with Unity (C#)
+Custom Loader (CustomLoader.cs)
+Create a custom loader to load JavaScript files in Unity:
+
+csharp
+Copy code
+using Puerts;
+using System.IO;
+using UnityEngine;
+
+public class CustomLoader : ILoader {
+    public bool FileExists(string filepath) {
+        string resourcePath = filepath.Replace(".mjs", "");
+        return Resources.Load<TextAsset>(resourcePath) != null;
+    }
+
+    public string ReadFile(string filepath, out string debugpath) {
+        debugpath = Path.Combine(Application.dataPath, "Resources", filepath);
+        TextAsset file = Resources.Load<TextAsset>(filepath.Replace(".mjs", ""));
+        if (file == null) throw new FileNotFoundException($"File {filepath} not found at {debugpath}");
+        return file.text;
+    }
+}
+Initialization Script (InitializePuerts.cs)
+Use this script to initialize PuerTS and execute LangGraph in Unity:
+
+csharp
+Copy code
+using UnityEngine;
+using Puerts;
+
+public class InitializePuerts : MonoBehaviour {
+    private JsEnv jsEnv;
+
+    void Start() {
+        jsEnv = new JsEnv(new CustomLoader(), 9229);
+        jsEnv.ExecuteModule("langgraph.bundle.mjs");
+    }
+
+    void Update() => jsEnv?.Tick();
+    private void OnDestroy() => jsEnv?.Dispose();
+}
+Running the Graph
+Run Unity, and you should see output similar to:
+
+sql
+Copy code
+Final message: Hello from Unity!
