@@ -1,14 +1,15 @@
 import { app } from './langgraph.bundle.mjs';
 
-if (typeof ReadableStream === "undefined") {
-  console.error("ReadableStream is still undefined in this environment. Applying fallback polyfill.");
-  // Apply fallback for ReadableStream, if any exists or try loading it dynamically here if possible
-} else {
-  console.log("ReadableStream is available.");
+async function initializeEnvironment() {
+  if (typeof ReadableStream === "undefined") {
+    console.error("ReadableStream is undefined. Applying fallback polyfill.");
+  } else {
+    console.log("ReadableStream is available.");
+  }
 }
 
-async function testLangGraph() {
-  console.log('Testing LangGraph with bundled ES module...');
+async function testLangGraphWithLLMUnity() {
+  console.log("Testing LangGraph with LLMUnity integration...");
 
   try {
     const initialState = { messages: [] };
@@ -16,13 +17,17 @@ async function testLangGraph() {
 
     if (finalState && finalState.messages && finalState.messages.length > 0) {
       const lastMessage = finalState.messages[finalState.messages.length - 1];
-      console.log('Final message:', lastMessage.content);
+      console.log("LangGraph Final Message:", lastMessage.content);
+
+      // Call the public instance method to send the message to LLMCharacter
+      CS.MFPS.Scripts.InitializePuerts.Instance.SendMessageToLLMCharacter(lastMessage.content);
     } else {
-      console.warn('No messages found in final state:', finalState);
+      console.warn("No messages found in LangGraph final state:", finalState);
     }
   } catch (error) {
-    console.error('Error executing LangGraph:', error);
+    console.error("Error during LangGraph and LLMUnity test:", error);
   }
 }
 
-testLangGraph();
+initializeEnvironment();
+testLangGraphWithLLMUnity();
