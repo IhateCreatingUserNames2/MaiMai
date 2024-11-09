@@ -1,8 +1,7 @@
 using UnityEngine;
 using Puerts;
+using System;
 using LLMUnity;
-using System.Threading.Tasks;
-
 
 namespace MFPS.Scripts
 {
@@ -14,11 +13,18 @@ namespace MFPS.Scripts
         // Singleton Instance
         public static InitializePuerts Instance { get; private set; }
 
+        // Event to notify when an LLM response is received
+        public event Action<string> OnLLMResponseReceived;
+
+        // Reference to the JavaScript function
+        private Action<string> processUserInputJS;
+
         void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -31,14 +37,23 @@ namespace MFPS.Scripts
             try
             {
                 Debug.Log("Initializing PuerTS environment...");
-                jsEnv = new JsEnv();
+                jsEnv = new JsEnv(new CustomLoader("Assets/Resources"));
 
-                // Execute the testLangGraph module to test the PuerTS setup
-                jsEnv.ExecuteModule("testLangGraph.mjs");
+                // Load the JavaScript module and bind to the function that processes user input
+                processUserInputJS = jsEnv.ExecuteModule<Action<string>>("langgraph.bundle.mjs", "processUserInput");
+
+                if (processUserInputJS == null)
+                {
+                    Debug.LogError("JavaScript function processUserInput not found.");
+                }
+                else
+                {
+                    Debug.Log("Successfully bound to processUserInput function.");
+                }
 
                 Debug.Log("PuerTS environment initialized successfully!");
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Failed to initialize PuerTS: {e}");
             }
@@ -55,7 +70,19 @@ namespace MFPS.Scripts
             if (Instance == this) Instance = null;
         }
 
-        // Public method to receive messages from JavaScript and call LLMCharacter.Chat
+        // Method to process user input from PicoDialogue.cs
+        public void ProcessUserInput(string userInput)
+        {
+            if (jsEnv == null || processUserInputJS == null)
+            {
+                Debug.LogError("PuerTS environment or JavaScript function not properly initialized.");
+                return;
+            }
+
+            // Call the JavaScript function and pass the user input
+            processUserInputJS.Invoke(userInput);
+        }
+
         public void SendMessageToLLMCharacter(string message)
         {
             if (llmCharacter == null)
@@ -64,12 +91,15 @@ namespace MFPS.Scripts
                 return;
             }
 
-            // Call Chat on the LLMCharacter and log the result asynchronously
             llmCharacter.Chat(message).ContinueWith(task =>
             {
                 if (task.IsCompletedSuccessfully)
                 {
-                    Debug.Log($"LLM response: {task.Result}");
+                    string response = task.Result;
+                    Debug.Log($"LLM response: {response}");
+
+                    // Notify subscribers with the response
+                    OnLLMResponseReceived?.Invoke(response);
                 }
                 else
                 {
