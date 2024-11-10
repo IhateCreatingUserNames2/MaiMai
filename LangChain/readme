@@ -8,7 +8,7 @@ Scripts Folder
 Resources Folder
 
 Load Scripts/InitializePuerts.cs in any GameObject 
-
+Edit namespace MFPS.Scripts and similars from Scripts
 
 Setup Process:
 
@@ -28,4 +28,4 @@ Edit webpack.config.js and src/index.ts for custom code
 
 Scripts/PicoDialogue.cs is an example of User Input with UI and OnSendButtonClicked()  runs user input thru InitializePuerts.Instance.ProcessUserInput(playerInput);  InitializePuerts.cs which calls testLangGraph.mjs which runs LangGranph on langgranph.bundle.mjs 
 
-Edit namespace MFPS.Scripts and similars 
+ 
