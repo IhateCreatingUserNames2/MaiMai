@@ -18,8 +18,11 @@ Create Folder, open CMD cd /d C:/Folder
 npm install langchain and langgraph install all dependencies
 install webpack
 run npx webpack thru webpack.config.js
-it generates a new langgraph.bundle.mjs
+it generates a new langgraph.bundle.mjs -> put new in Unity folder Assets/Resources/ 
 
 Unity C# Scripts/IntiliazePuerts.cs calls Resources/testLangGraph.mjs which runs langgraph.bundle.mjs
 
 Edit webpack.config.js and src/index.ts for custom code 
+
+Scripts/PicoDialogue.cs is an example of User Input with UI and OnSendButtonClicked()  runs user input thru InitializePuerts.Instance.ProcessUserInput(playerInput);  InitializePuerts.cs which calls testLangGraph.mjs which runs LangGranph on langgranph.bundle.mjs 
+
