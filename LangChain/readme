@@ -1,5 +1,6 @@
 Usage:
 
+
 Download testLangGraph.mjs
 langgraph.bundle.mjs
 webpack.config.js
@@ -12,6 +13,7 @@ Edit namespace MFPS.Scripts and similars from Scripts
 
 Setup Process:
 
+Install PuerTS: https://puerts.github.io/en/docs/puerts/unity/install 
 Install NodeJS
 install npm 
 Create Folder, open CMD cd /d C:/Folder
