@@ -13,9 +13,9 @@ Edit namespace MFPS.Scripts and similars from Scripts
 
 Setup Process:
 
-Install PuerTS: https://puerts.github.io/en/docs/puerts/unity/install 
-Install NodeJS
-install npm 
+Install PuerTS in UNITY: https://puerts.github.io/en/docs/puerts/unity/install 
+Install NodeJS in Windows
+install npm in Windows
 Create Folder, open CMD cd /d C:/Folder
 npm install langchain , langchain-core and langgraph install all dependencies
 install webpack
