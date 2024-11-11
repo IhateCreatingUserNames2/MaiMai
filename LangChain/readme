@@ -17,7 +17,7 @@ Install PuerTS in UNITY: https://puerts.github.io/en/docs/puerts/unity/install
 Install NodeJS in Windows
 install npm in Windows
 Create Folder, open CMD cd /d C:/Folder
-npm install langchain , langchain-core and langgraph install all dependencies <- or just run package.json 
+npm install langchain , langchain-core and langgraph install all dependencies <- check package.json for dependencies 
 install webpack
 run npx webpack thru webpack.config.js
 it generates a new langgraph.bundle.mjs -> put new in Unity folder Assets/Resources/ 
