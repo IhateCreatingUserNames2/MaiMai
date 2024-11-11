@@ -12,10 +12,10 @@ Edit namespace MFPS.Scripts and similars from Scripts
 
 Setup Process:
 
-Install NodelJs
+Install NodeJS
 install npm 
 Create Folder, open CMD cd /d C:/Folder
-npm install langchain and langgraph install all dependencies
+npm install langchain , langchain-core and langgraph install all dependencies
 install webpack
 run npx webpack thru webpack.config.js
 it generates a new langgraph.bundle.mjs -> put new in Unity folder Assets/Resources/ 
@@ -25,6 +25,8 @@ it generates a new langgraph.bundle.mjs -> put new in Unity folder Assets/Resour
 Unity C# Scripts/IntiliazePuerts.cs calls Resources/testLangGraph.mjs which runs langgraph.bundle.mjs
 
 Edit webpack.config.js and src/index.ts for custom code 
+
+Index.ts is the TS script that ccontrolls LangGraph. You can add other files thru webpack 
 
 Scripts/PicoDialogue.cs is an example of User Input with UI and OnSendButtonClicked()  runs user input thru InitializePuerts.Instance.ProcessUserInput(playerInput);  InitializePuerts.cs which calls testLangGraph.mjs which runs LangGranph on langgranph.bundle.mjs 
 
