@@ -11,7 +11,8 @@ read https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/Readme2
 
 This project is focused on creating an NPC interaction system in Unity using the **LLMUnity** framework. The system allows NPCs to interact with players through AI-driven dialogue, memory management, and context-based responses.
 each AI Agent has its own pre-setup prompt, you can personalize each, you can spawn Multiple AI Agents across the Scene, for example in a dungeon you can spawn a prisioner, an enemy, an npc, all with their own unique pre-setup-prompt, Chat History By USER_ID, RAG Long Memory BY AGENT_ID and ai data in general. 
-If you Integrate AI Agent system with LangGraph, you can spawn ai agents that can do tasks, for example: In a dungeon you spawn an AI Agent Prisioner that depending on Context or User Input delivers a Quest or an Item or Anything you want. 
+If you Integrate AI Agent system with LangGraph, you can spawn ai agents that can do tasks, for example: In a dungeon you spawn an AI Agent Prisioner that depending on Context or User Input delivers a Quest or an Item or Anything you want. Thru LangGraph you can also use External Tools, or Files as a DB Search. For example: You have an NPC that needs the LORE of the Game, you can set up a node in LangGraph that will Search for Relevant Content in a File, for example: loregame.txt. Or even search the internet and retrieve information. It can also be used for reasoning. it can have multiple Prompts for Difference Scenarios, triggers or tasks... It can pass down Requests to LLM, for example: Extract data from X then Asks LLM to DO X Task. Search the internet for LangGraph to understand its capabilities. 
+
 Lang Graph is JS. Invoked Thru PuerTS , PuerTS is invoked by InitializePuerts.cs which bridges Lang Graph LLM Call to LLMUnity.chat(message) function. 
 
 
