@@ -1,5 +1,7 @@
 The current LangGraph template defines a StateGraph using LangChain annotations and states. This setup is a framework or "template" for an AI character or "agent" that interacts with a user by receiving user input, processing context, and generating an AI-driven response. Here's a breakdown:
 
+CHECK INDEX.TS FOR CURRENT TEMPLATE 
+
 GraphState and Annotations:
 
 GraphState defines the structure of the conversation, with annotations to manage the conversation history (messages) and the specific agent (agentData).
