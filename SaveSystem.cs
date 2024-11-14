@@ -34,6 +34,7 @@ public static class SaveSystem
 
     public static async Task SaveAgentDataAsync(AIAgent agent)
     {
+        Debug.Log($"Attempting to save agent: {agent.AgentName} with ID: {agent.AgentId}");
         Directory.CreateDirectory(path);
 
         if (agent == null)
@@ -79,7 +80,6 @@ public static class SaveSystem
         }
     }
 
-
     public static async Task SaveManifestAsync(List<AIAgent> agents)
     {
         try
@@ -98,6 +98,8 @@ public static class SaveSystem
 
     public static async Task<List<AIAgent>> LoadAllAgentsAsync()
     {
+
+        Debug.Log("Loading all agents from disk...");
         List<AIAgent> agents = new List<AIAgent>();
 
         string manifestPath = Path.Combine(path, "agent_manifest.json");
@@ -147,6 +149,7 @@ public static class SaveSystem
                     }
                     LLMCharacter llmCharacter = PicoDialogue.Instance.llmCharacter;
 
+                    // Obtain memory manager instance
                     LLMCharacterMemoryManager memoryManager = LLMCharacterMemoryManager.Instance;
 
                     if (memoryManager == null)
@@ -157,8 +160,8 @@ public static class SaveSystem
 
                     if (llmCharacter != null && memoryManager != null)
                     {
-                        // Create a new AIAgent instance
-                        AIAgent agent = new AIAgent(data.agentId, data.agentName, llmCharacter, data.personality, data.background, memoryManager);
+                        // Create a new AIAgent instance, now with AgentName included
+                        AIAgent agent = new AIAgent(data.agentId, data.agentName, llmCharacter, data.customPrompt, memoryManager);
 
                         agent.UserConversations = data.userConversations.ToDictionary(
                             kvp => kvp.Key,
@@ -226,17 +229,15 @@ public static class SaveSystem
 public class AIAgentData
 {
     public string agentId;
-    public string agentName;
-    public string personality;
-    public string background;
+    public string agentName; // Added AgentName field for saving
+    public string customPrompt;
     public Dictionary<string, List<MessageEntry>> userConversations;
 
     public AIAgentData(AIAgent agent)
     {
         agentId = agent.AgentId;
-        agentName = agent.AgentName;
-        personality = agent.Personality;
-        background = agent.Background;
+        agentName = agent.AgentName; // Assign AgentName for saving
+        customPrompt = agent.systemPrompt; // Assuming systemPrompt holds the customPrompt in AIAgent
         userConversations = agent.UserConversations;
     }
 }

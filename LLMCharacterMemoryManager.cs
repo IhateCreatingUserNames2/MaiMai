@@ -16,14 +16,16 @@ public class LLMCharacterMemoryManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Persist across scenes
+            // DontDestroyOnLoad(gameObject); // Persist across scenes
+            Debug.Log("LLMCharacterMemoryManager instance created.");
         }
-        else
+        else if (Instance != this)
         {
+            Debug.Log("Duplicate LLMCharacterMemoryManager instance detected and destroyed.");
             Destroy(gameObject); // Enforce singleton
-            return;
         }
     }
+
 
     private void Start()
     {

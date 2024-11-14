@@ -3,16 +3,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using LLMUnity;
 using System.Threading.Tasks;
-using Photon.Pun; // Include Photon PUN namespace
+using Photon.Pun;
 using Photon.Realtime;
-using MFPS; 
-
+using MFPS;
+using System.Collections;
 
 public class AgentCreateUI : MonoBehaviour
 {
-    public TMP_InputField agentNameInput;
-    public TMP_InputField personalityInput;
-    public TMP_InputField backgroundInput;
+    public TMP_InputField agentNameInput; // New field for AgentName
+    public TMP_InputField customPromptInput; // Field for CustomPrompt
     public Button createAgentButton;
     public AIAgentManager aiButtonController;
     public LLMCharacter llmCharacter;
@@ -20,10 +19,12 @@ public class AgentCreateUI : MonoBehaviour
 
     private void Start()
     {
-        // Dynamically assign LLMCharacterMemoryManager from the persistent instance
+
+        StartCoroutine(RetryMemoryManagerAssignment());
+
         if (memoryManager == null)
         {
-            memoryManager = LLMCharacterMemoryManager.Instance; // Get the singleton instance
+            memoryManager = LLMCharacterMemoryManager.Instance;
             if (memoryManager == null)
             {
                 Debug.LogError("LLMCharacterMemoryManager is not found. Ensure it is initialized in the MainMenu scene.");
@@ -34,10 +35,8 @@ public class AgentCreateUI : MonoBehaviour
             }
         }
 
-        // Ensure llmCharacter is initialized
         if (llmCharacter == null)
         {
-            // Try to find an existing LLMCharacter in the scene
             llmCharacter = FindObjectOfType<LLMCharacter>();
             if (llmCharacter == null)
             {
@@ -53,7 +52,6 @@ public class AgentCreateUI : MonoBehaviour
             Debug.Log("LLMCharacter is already assigned via the Inspector.");
         }
 
-        // Assign the listener for the Create Agent button
         if (createAgentButton != null)
         {
             createAgentButton.onClick.AddListener(OnCreateAgentClicked);
@@ -64,12 +62,35 @@ public class AgentCreateUI : MonoBehaviour
         }
     }
 
+    private IEnumerator RetryMemoryManagerAssignment()
+    {
+        int retryCount = 10;
+        while (retryCount > 0)
+        {
+            memoryManager = LLMCharacterMemoryManager.Instance;
+            if (memoryManager != null)
+            {
+                Debug.Log("LLMCharacterMemoryManager successfully assigned in AgentCreateUI.");
+                yield break;
+            }
+            retryCount--;
+            yield return new WaitForSeconds(0.2f); // Retry after a short delay
+        }
+        Debug.LogError("LLMCharacterMemoryManager could not be found in the current scene.");
+    }
+
+
 
     public async void OnCreateAgentClicked()
     {
         string agentName = agentNameInput.text.Trim();
-        string personality = personalityInput.text.Trim();
-        string background = backgroundInput.text.Trim();
+        string customPrompt = customPromptInput.text.Trim();
+
+        if (string.IsNullOrEmpty(agentName))
+        {
+            Debug.LogError("AgentName cannot be empty.");
+            return;
+        }
 
         if (memoryManager == null)
         {
@@ -83,7 +104,7 @@ public class AgentCreateUI : MonoBehaviour
             return;
         }
 
-        llmCharacter.AIName = agentName;
+        llmCharacter.AIName = agentName; // Use AgentName for display purposes
         llmCharacter.playerName = GetPlayerName();
 
         LLMCharacter agentLLMCharacter = Instantiate(llmCharacter);
@@ -92,17 +113,15 @@ public class AgentCreateUI : MonoBehaviour
 
         AIAgent newAgent = new AIAgent(
             System.Guid.NewGuid().ToString(),
-            agentName,
+            agentName, // Assign the specified AgentName for UI
             agentLLMCharacter,
-            personality,
-            background,
+            customPrompt,
             memoryManager
         );
 
-        // Explicitly call SetupSystemPrompt and check if it applies correctly
-        newAgent.SetupSystemPrompt();
+        newAgent.SetupSystemPrompt(newAgent.AgentId, customPrompt);
 
-        Debug.Log($"Agent Created - Name: {newAgent.AgentName}, Personality: {newAgent.Personality}, Background: {newAgent.Background}");
+        Debug.Log($"Agent Created - Name: {newAgent.AgentName}, Custom Prompt: {customPrompt}");
 
         if (AIManager.Instance != null)
         {
@@ -116,34 +135,23 @@ public class AgentCreateUI : MonoBehaviour
         {
             aiButtonController.PopulateDropdown();
         }
-    }
 
+        ClearInputFields();
+    }
 
     private string GetPlayerName()
     {
-        // Attempt to get the player's name from bl_PhotonNetwork
         if (!string.IsNullOrEmpty(bl_PhotonNetwork.NickName))
         {
             Debug.Log($"Player name retrieved from bl_PhotonNetwork: {bl_PhotonNetwork.NickName}");
             return bl_PhotonNetwork.NickName;
         }
-        else
-        {
-            Debug.LogWarning("bl_PhotonNetwork.NickName is null or empty.");
-        }
-
-        // Alternatively, attempt to get the player's name from PhotonNetwork
         if (PhotonNetwork.LocalPlayer != null && !string.IsNullOrEmpty(PhotonNetwork.LocalPlayer.NickName))
         {
             Debug.Log($"Player name retrieved from PhotonNetwork.LocalPlayer: {PhotonNetwork.LocalPlayer.NickName}");
             return PhotonNetwork.LocalPlayer.NickName;
         }
-        else
-        {
-            Debug.LogWarning("PhotonNetwork.LocalPlayer.NickName is null or empty.");
-        }
 
-        // As a last resort, attempt to get the player's name from the GameObject's name
         GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
         if (playerGO != null)
         {
@@ -153,28 +161,15 @@ public class AgentCreateUI : MonoBehaviour
                 Debug.Log($"Player name retrieved from GameObject name: {playerName}");
                 return playerName;
             }
-            else
-            {
-                Debug.LogWarning("Player GameObject name is null or empty.");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Player GameObject with tag 'Player' not found in the scene.");
         }
 
-        // Return a default name if all else fails
         Debug.LogWarning("Player name could not be retrieved. Using default name 'Player'.");
         return "Player";
     }
 
-
-
-
     private void ClearInputFields()
     {
         agentNameInput.text = "";
-        personalityInput.text = "";
-        backgroundInput.text = "";
+        customPromptInput.text = "";
     }
 }

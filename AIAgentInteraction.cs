@@ -7,6 +7,7 @@ public class AIAgentInteraction : MonoBehaviour
 {
     private AIAgent assignedAgent;
     private PicoDialogue picoDialogue;
+    public AIAgent AssignedAgent => assignedAgent;
 
 
     void Awake()

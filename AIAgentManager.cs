@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections;
 using LLMUnity;
 using System;
+using System.Threading.Tasks;
 
 public class AIAgentManager : MonoBehaviour
 {
@@ -81,17 +82,27 @@ public class AIAgentManager : MonoBehaviour
 
     public void PopulateDropdown()
     {
-        if (aiDropdown != null && AIManager.Instance != null)
+        if (aiDropdown == null)
         {
+            Debug.LogError("AI Dropdown is not assigned.");
+            return;
+        }
+
+        if (AIManager.Instance != null)
+        {
+            AIManager.Instance.LoadAllAgents();  // Force load agents each time
             aiDropdown.ClearOptions();
             aiDropdown.AddOptions(AIManager.Instance.GetAllAgentNames());
             Debug.Log("AI Dropdown populated with saved agents.");
         }
         else
         {
-            Debug.LogError("Cannot populate dropdown: AI Dropdown or AIManager.Instance is null.");
+            Debug.LogError("AIManager.Instance is null. Cannot populate dropdown.");
         }
     }
+
+
+
 
     public void OnSelectAIClicked()
     {
@@ -226,6 +237,52 @@ public class AIAgentManager : MonoBehaviour
             await memoryManager.EmbedMessageAsync(messageEntry, agent.AgentId);
         }
     }
+
+    private void OnApplicationPause(bool pause)
+    {
+        if (pause)
+        {
+            Debug.Log("Application is pausing. Saving all agent data...");
+            SaveAllAgentsData();
+        }
+
+    }
+    public async Task<string> RetrieveContextForAgent(string agentId, string userInput)
+    {
+        AIAgent agent = AIManager.Instance?.GetAIAgentByName(agentId);
+        if (agent == null)
+        {
+            Debug.LogError($"Agent with ID '{agentId}' not found.");
+            return "";
+        }
+
+        return await agent.RetrieveRelevantContextAsync(userInput, agentId);
+    }
+
+    // Optional: Keep OnApplicationQuit if you want redundancy
+    private void OnApplicationQuit()
+    {
+        Debug.Log("Application is quitting. Saving all agent data...");
+        SaveAllAgentsData();
+    }
+
+    private void SaveAllAgentsData()
+    {
+        // Save data for each spawned agent
+        foreach (GameObject agentObject in spawnedAgents)
+        {
+            if (agentObject != null)
+            {
+                AIAgentInteraction agentInteraction = agentObject.GetComponent<AIAgentInteraction>();
+                if (agentInteraction != null && agentInteraction.AssignedAgent != null)
+                {
+                    SaveAgentData(agentInteraction.AssignedAgent);
+                    Debug.Log($"Data saved for agent '{agentInteraction.AssignedAgent.AgentName}'.");
+                }
+            }
+        }
+    }
+
 
     public void DespawnAllAgents()
     {

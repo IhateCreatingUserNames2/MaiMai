@@ -13,6 +13,10 @@ public class AIManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<AIManager>();
+                if (_instance == null)
+                {
+                    Debug.LogError("No instance of AIManager found in the scene.");
+                }
             }
             return _instance;
         }
