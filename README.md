@@ -89,7 +89,7 @@ DYNAMIC USER GENERATED NPC
 
 Ensure the following components are added to the scene and properly configured in the Unity Inspector:
 
-1. **`AgentCreateUI.cs`** (For user panel)
+1. **`AgentCreateUI.cs`** (For user panel and Registering Ai Agents in the AI Manager. Ai Agent Interaction Also does this for Fixed Agents)
 2. **`PicoDialogue.cs`** (Handles user input UI and LLM response display)
    - Add the `PicoDialogue.onSendButtonClicked()` method to the button's `onClick()` event.
    - Leave NPC configurations blank for dynamic agents.
