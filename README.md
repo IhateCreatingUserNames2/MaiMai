@@ -20,11 +20,10 @@
 This configuration of MaiMai runs with LangGraphJS. However, you can run MaiMai **without LangGraph** by editing the `OnSendButtonClicked()` function in `PicoDialogue.cs`:
 
 ### **Modify the following line:**
-```csharp
+
 InitializePuerts.Instance.ProcessUserInput(playerInput, currentAgent.AgentId);
 Change it to:
-csharp
-Copy code
+
 RunAsyncResponse(playerInput);
 Installation
 Download Contents:
