@@ -127,6 +127,7 @@ If you building Chat Bubbles, check the ChatHistory Options in LLMUnity to load 
 
 1. **Install Required Dependencies:**
    - Install **TypeScript**, **npx**, and **webpack**.
+   - https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
    - Check `package.json` in `MaiMai/Package/webpack/langgraph-bundler`.
    - Extract node_modules.rar inside `MaiMai/Package/webpack/langgraph-bundler`.
 
