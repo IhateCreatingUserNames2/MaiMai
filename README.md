@@ -43,11 +43,6 @@ RunAsyncResponse(playerInput);
 
 ---
 
-### **Framework Details:**
-
-- MaiMai was constructed around a **Third Person Shooter Template (MFPS)**.
-
----
 
 ### **Default UI Configuration:**
 
