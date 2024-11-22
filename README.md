@@ -67,10 +67,15 @@ If adding fixed NPCs to your scene:
 - Agent Name and System Prompt can be configured by attaching `AiAgentInteraction.cs` to the NPC GameObject.
 
 #
+
 Fixed NPC
+
 ![image](https://github.com/user-attachments/assets/92d1fd35-2300-43c1-a564-d849066f6e1c)
+
 #
+
 DYNAMIC USER GENERATED NPC
+
 ![image](https://github.com/user-attachments/assets/e78beecb-2721-4cdf-9318-12a70c5dc2d9)
 
 
