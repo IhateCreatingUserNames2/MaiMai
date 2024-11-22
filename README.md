@@ -1,47 +1,39 @@
-# MaiMai AI Agent System
+[[[
 
-**MaiMai AI Agent System** allows players to spawn personal AI agents running through LLMUnity with a **custom AI agent name** and **custom AI agent system prompt**. Additionally, you can create **fixed AI agents** in the scene with customizable names and system prompts.
+MaiMai AI Agent System
+MaiMai AI Agent System allows players to spawn personal AI agents running through LLMUnity with a custom AI agent name and custom AI agent system prompt. Additionally, you can create fixed AI agents in the scene with customizable names and system prompts.
 
----
+Requirements
+LLMUnity
+GitHub Repository: https://github.com/undreamai/LLMUnity
+PuerTS for JS and LangGraph
+GitHub Repository: https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md
+Note: If you're not planning to use LangGraph, comment out the entire InitializePuerts.cs.
+Configuration for LangGraphJS
+This configuration of MaiMai runs with LangGraphJS. However, you can run MaiMai without LangGraph by editing the OnSendButtonClicked() function in PicoDialogue.cs:
 
-## Requirements
-
-### **LLMUnity**
-- GitHub Repository: [https://github.com/undreamai/LLMUnity](https://github.com/undreamai/LLMUnity)
-
-### **PuerTS for JS and LangGraph**
-- GitHub Repository: [https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md](https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md)
-- **Note:** If you're not planning to use LangGraph, comment out the entire `InitializePuerts.cs`.
-
----
-
-## Configuration for LangGraphJS
-
-This configuration of MaiMai runs with LangGraphJS. However, you can run MaiMai **without LangGraph** by editing the `OnSendButtonClicked()` function in `PicoDialogue.cs`:
-
-### **Modify the following line:**
-
+Modify the following line:
+csharp
+Copy code
 InitializePuerts.Instance.ProcessUserInput(playerInput, currentAgent.AgentId);
 Change it to:
-
+csharp
+Copy code
 RunAsyncResponse(playerInput);
 Installation
 Download Contents:
-
 Extract MaiMai to your Unity Assets folder.
 Extract Resources to your Unity Assets/Resources folder.
 Framework Details:
-
 MaiMai was constructed around a Third Person Shooter Template (MFPS).
 Default UI Configuration:
-
 For user interaction, MaiMai requires a UI with fields like:
+
 AI Agent Name
 System Prompt
 Drop-down list of created agents
 Buttons to Spawn and Remove agents
 Utilities like changing models and voices are included but not fully integrated yet.
-
 
 Fixed NPCs
 If adding fixed NPCs to your scene:
@@ -94,18 +86,14 @@ Copy the generated langgraph.bundle.mjs from the /dist/ folder.
 Paste it into ProjectFolder/Assets/Resources/.
 LangGraph Logic
 User Input Flow:
-
 InitializePuerts.cs initializes the JS environment.
 Runs testLangGraph.mjs -> langgraph.bundle.mjs -> index.ts.
 Imports LangGraph and initializes the environment.
 Agent Creation:
-
-Creates a new agent:
 javascript
 Copy code
 const GraphState = Annotation.Root();
 Process Flow:
-
 Processes user input, invokes LangGraph, and handles the final state.
 Passes the final state to:
 csharp
@@ -129,4 +117,17 @@ Respond in first person and do not include any conversation markers or role labe
 Conversation History:
 [ Chat history added from llmcharacter.chat feature ]
 Static Completion:
-Replace llmCharacter.Chat(message); with llmCharacter.Complete(message); in AiAgent.cs for static completion.
+Replace:
+
+csharp
+Copy code
+llmCharacter.Chat(message);
+With:
+
+csharp
+Copy code
+llmCharacter.Complete(message);
+In AiAgent.cs for static completion.
+
+License
+Refer to the respective repositories for licensing details of the required dependencies. ]]]
