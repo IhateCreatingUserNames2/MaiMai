@@ -64,7 +64,7 @@ Utilities like changing models and voices are included but not fully integrated 
 
 If adding fixed NPCs to your scene:
 - The UI is **not required**.
-- Agent Name and System Prompt can be configured by attaching `AiAgentInteraction.cs` to the NPC GameObject.
+- Agent Name and System Prompt can be configured by attaching `AiAgentInteraction.cs` to the NPC GameObject and TOGGLING IS FIXED ON.
 
 #
 
@@ -101,7 +101,7 @@ Ensure the following components are added to the scene and properly configured i
 6. **`AIAgentManager.cs`**
    - Configure in the Inspector.
    - **Current limitation:** Only supports one prefab model for user-created agents (dynamic support planned).
-   - Ensure every prefab includes `AiAgentInteraction.cs` and toggles the Fixed Agent option.
+   - Ensure every prefab includes `AiAgentInteraction.cs`.
 7. **`ModelSelector.cs`** (Optional: Load this script if you want to try the model selector.)
 8. **`LLMCharacterMemoryManager.cs`**
 9. **`RAG.cs`**
