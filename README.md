@@ -16,9 +16,11 @@
 
 ---
 
-## Configuration for LangGraphJS
+## With or Without Lang Graph - How to Remove LanG Graph 
 
 This configuration of MaiMai runs with LangGraphJS. However, you can run MaiMai **without LangGraph** by editing the `OnSendButtonClicked()` function in `PicoDialogue.cs`:
+Comment/Remove Entire InitializePuerts.cs Script
+
 
 ### **Modify the following line:**
 ```csharp
