@@ -1,158 +1,133 @@
-# NPC Interaction System with AI Agent (LLMUnity Framework)
+# MaiMai AI Agent System
 
-This requires: LLMUnity and RagSearchUnity Imported
-https://github.com/undreamai/LLMUnity
-https://github.com/undreamai/RAGSearchUnity
-
-read https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/Readme2 
-
-![image](https://github.com/user-attachments/assets/21ee77d5-4849-4e11-a211-cff9f1bd09e2)
-
-
-This project is focused on creating an NPC interaction system in Unity using the **LLMUnity** framework. The system allows NPCs to interact with players through AI-driven dialogue, memory management, and context-based responses.
-each AI Agent has its own pre-setup prompt, you can personalize each, you can spawn Multiple AI Agents across the Scene, for example in a dungeon you can spawn a prisioner, an enemy, an npc, all with their own unique pre-setup-prompt, Chat History By USER_ID, RAG Long Memory BY AGENT_ID and ai data in general. 
-If you Integrate AI Agent system with LangGraph, you can spawn ai agents that can do tasks, for example: In a dungeon you spawn an AI Agent Prisioner that depending on Context or User Input delivers a Quest or an Item or Anything you want. Thru LangGraph you can also use External Tools, or Files as a DB Search. For example: You have an NPC that needs the LORE of the Game, you can set up a node in LangGraph that will Search for Relevant Content in a File, for example: loregame.txt. Or even search the internet and retrieve information. It can also be used for reasoning. it can have multiple Prompts for Difference Scenarios, triggers or tasks... It can pass down Requests to LLM, for example: Extract data from X then Asks LLM to DO X Task. Search the internet for LangGraph to understand its capabilities. 
-
-Lang Graph is JS. Invoked Thru PuerTS , PuerTS is invoked by InitializePuerts.cs which bridges Lang Graph LLM Call to LLMUnity.chat(message) function. 
-
-
-
-//Custom prompt///
-
-
-Custom prompt Removes Personality and Background, it uses Agent Name for data retrieval. It has only CUstom Prompt as a field to personalize the agent. In this setup the Setup prompt = Custom Prompt.
-
-
-
-// Custom Prompt///
-## Key Components
-
-### **AIAgent.cs**
-
-Represents an AI-driven NPC (agent) with a unique `AgentId`, name, personality, and background. Each agent can interact with players, store conversation history, and retrieve context using a memory manager.
-
-- **Key Methods**:
-  - `Interact`: Handles player messages, retrieves relevant context using the memory manager, and constructs a prompt for the AI.
-  - `RetrieveRelevantContext`: Fetches relevant conversation history or context for better responses.
-
-
+**MaiMai AI Agent System** allows players to spawn personal AI agents running through LLMUnity with a **custom AI agent name** and **custom AI agent system prompt**. Additionally, you can create **fixed AI agents** in the scene with customizable names and system prompts.
 
 ---
 
-### **PicoDialogue.cs**
+## Requirements
 
-Manages the interaction between the player and the NPC, connecting player input to the AI agent and controlling the dialogue UI. This system supports both floating dialogue and Photon Chat integration for multiplayer.
+### **LLMUnity**
+- GitHub Repository: [https://github.com/undreamai/LLMUnity](https://github.com/undreamai/LLMUnity)
 
-- **Key Methods**:
-  - `OpenPlayerInputUI`: Displays the input UI when the player is near an NPC.
-  - `RunAsyncResponse`: Sends player input to the AI agent and displays the agent's response.
-
----
-
-### **AIAgentManager.cs**
-
-Responsible for spawning AI agents, managing agent registration, and linking agents with **PicoDialogue**. It also handles loading chat history and ensures that agents are linked to their memory for context-based responses.
-
-- **Key Methods**:
-  - `SpawnAI`: Instantiates an AI agent in the scene and assigns the necessary components for interaction.
-  - `LoadAllAgents`: Loads agents from saved data using the **SaveSystem**.
+### **PuerTS for JS and LangGraph**
+- GitHub Repository: [https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md](https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md)
+- **Note:** If you're not planning to use LangGraph, comment out the entire `InitializePuerts.cs`.
 
 ---
 
-### **SaveSystem.cs**
+## Configuration for LangGraphJS
 
-Handles saving and loading AI agents and their conversation histories. It stores agent data, including chat history, using JSON serialization.
+This configuration of MaiMai runs with LangGraphJS. However, you can run MaiMai **without LangGraph** by editing the `OnSendButtonClicked()` function in `PicoDialogue.cs`:
 
-- **Key Methods**:
-  - `SaveAllAgents`: Saves all registered AI agents and their histories.
-  - `LoadAllAgents`: Loads all agents and their chat histories back into the system.
+### **Modify the following line:**
+```csharp
+InitializePuerts.Instance.ProcessUserInput(playerInput, currentAgent.AgentId);
+Change it to:
+csharp
+Copy code
+RunAsyncResponse(playerInput);
+Installation
+Download Contents:
 
----
+Extract MaiMai to your Unity Assets folder.
+Extract Resources to your Unity Assets/Resources folder.
+Framework Details:
 
-### **AgentCreateUI.cs**
+MaiMai was constructed around a Third Person Shooter Template (MFPS).
+Default UI Configuration:
 
-Provides a UI for creating new AI agents. Players or developers can input agent names, personalities, and backgrounds to instantiate a new AI agent.
-
-- **Key Methods**:
-  - `OnCreateAgentClicked`: Creates a new agent using the provided inputs and registers it with the **AIAgentManager**.
-
----
-
-### **LLMCharacterMemoryManager.cs**
-
-Manages the memory of each AI agent by embedding and retrieving conversation history for context-based responses. It uses a **SearchEngine** to retrieve relevant conversations.
-
-- **Key Methods**:
-  - `EmbedChatHistory`: Embeds chat history into the memory for future retrieval.
-  - `SearchChatHistory`: Retrieves relevant past conversations based on the player’s query.
-
----
-
-### **ModelSelector.cs**
-
-Provides UI functionality to select and switch between different LLM (Language Model) configurations.
-
-- **Key Methods**:
-  - `OnChangeModelButtonClicked`: Switches the AI model used by **LLMCharacter** based on player selection.
-
----
-
-### **GameSettings.cs**
-
-Handles global settings for the game, such as enabling voice-over for the AI responses.
-
----
-
-## Interaction Flow
-
-1. **Agent Creation**: New agents are created using the **AgentCreateUI** by providing personality and background information.
-2. **Agent Registration**: The **AIAgentManager** registers the agent, stores it, and can spawn it in the game world.
-3. **Player Interaction**: When a player approaches an AI agent, **PicoDialogue** opens the player input UI, allowing the player to send messages.
-4. **AI Response**: The agent uses its memory and context from previous conversations to interact with the player. **LLMCharacter** generates dynamic responses, displayed on the screen.
-5. **Saving Data**: Agent data, including chat history, is saved via the **SaveSystem** for persistent interactions across game sessions.
-
----
-
-## Displaying LLM Output in PicoDialogue
-
-To display the LLM output in **PicoDialogue**, follow these steps:
-
-1. **Set Agent Data**: Assign the correct AI agent using `SetAgentData` when the player interacts with an NPC:
-    ```csharp
-    picoDialogue.SetAgentData(assignedAgent);
-    ```
-
-2. **Player Input Handling**: Process the player's input when they click the send button:
-    ```csharp
-    public void OnSendButtonClicked()
-    {
-        string playerInput = playerInputField.text.Trim();
-        RunAsyncResponse(playerInput); // Send input for AI processing
-    }
-    ```
-
-3. **Run Async Response**: Send the player's message to the AI, which generates a response using its memory:
-    ```csharp
-    private async void RunAsyncResponse(string playerInput)
-    {
-        string aiResponse = await currentAgent.Interact(userId, playerInput);
-        ShowDialogue(aiResponse); // Display the response
-    }
-    ```
-
-4. **Show Dialogue**: Display the AI's response in both the dialogue UI and floating text:
-    ```csharp
-    public void ShowDialogue(string message)
-    {
-        dialogueText.text = message; // Display in UI
-        floatingDialogueText.text = message; // Display floating text
-    }
-    ```
-
-This system provides seamless NPC interaction where the AI generates dynamic, context-aware responses based on the player's input and the agent’s memory.
+For user interaction, MaiMai requires a UI with fields like:
+AI Agent Name
+System Prompt
+Drop-down list of created agents
+Buttons to Spawn and Remove agents
+Utilities like changing models and voices are included but not fully integrated yet.
 
 
-Some of those files need to be loaded as components in the scene, aiagentinteraction needs to be loaded in the NPC prefab
----
+Fixed NPCs
+If adding fixed NPCs to your scene:
 
-Feel free to explore and modify these components as per your project needs!
+The UI is not required.
+Agent Name and System Prompt can be configured by attaching AiAgentInteraction.cs to the NPC GameObject.
+Important:
+Every prefab must include the AiAgentInteraction.cs script.
+Toggle the Fixed Agent option in the inspector.
+Required Scene Components
+Ensure the following components are added to the scene and properly configured in the Unity Inspector:
+
+AgentCreateUI.cs (For user panel)
+PicoDialogue.cs (Handles user input UI and LLM response display)
+Add the PicoDialogue.onSendButtonClicked() method to the button's onClick() event.
+Leave NPC configurations blank for dynamic agents.
+LLmCharacter.cs (Leave NPC configurations blank for dynamic agents)
+LLM.cs
+Remember to download models and RAG models.
+Note: Some Android utility scripts hardcode models (e.g., 1b and 3B). If adding more, adjust LLMUnitySetupHelper.cs accordingly.
+AIManager.cs
+AIAgentManager.cs
+Configure in the Inspector.
+Current limitation: Only supports one prefab model for user-created agents (dynamic support planned).
+Ensure every prefab includes AiAgentInteraction.cs and toggles the Fixed Agent option.
+ModelSelector.cs (Optional: Load this script if you want to try the model selector.)
+LLMCharacterMemoryManager.cs
+RAG.cs
+Configure SearchType, Chunking (e.g., Token Splitter), and NumToken (default: 10).
+For custom configurations, consult LLmCharacterMemoryManager.cs.
+InitializePuerts.cs (Initializes the LangGraph system)
+Using LangGraph
+Setup:
+Install Required Dependencies:
+
+Install TypeScript, npx, and webpack.
+Check package.json in MaiMai/Package/webpack/langgraph-bundler.
+Edit LangGraph Code:
+
+Modify index.ts as needed.
+Bundle LangGraph:
+
+Run the following command in the MaiMai/Package/webpack/langgraph-bundler folder:
+bash
+Copy code
+npx webpack
+Update Project:
+
+Copy the generated langgraph.bundle.mjs from the /dist/ folder.
+Paste it into ProjectFolder/Assets/Resources/.
+LangGraph Logic
+User Input Flow:
+
+InitializePuerts.cs initializes the JS environment.
+Runs testLangGraph.mjs -> langgraph.bundle.mjs -> index.ts.
+Imports LangGraph and initializes the environment.
+Agent Creation:
+
+Creates a new agent:
+javascript
+Copy code
+const GraphState = Annotation.Root();
+Process Flow:
+
+Processes user input, invokes LangGraph, and handles the final state.
+Passes the final state to:
+csharp
+Copy code
+PicoDialogue.Instance.RunAsyncResponse(message);
+AIAgent interacts with RAG to build the final prompt.
+Final Prompt Structure
+The system constructs the following prompt:
+
+vbnet
+Copy code
+Your name is: {AgentName}
+Your Custom Prompt: {systemPrompt}
+
+{contextSection}
+
+As {AgentName}, please provide an appropriate response to the user's last message.
+
+Respond in first person and do not include any conversation markers or role labels in your response.
+
+Conversation History:
+[ Chat history added from llmcharacter.chat feature ]
+Static Completion:
+Replace llmCharacter.Chat(message); with llmCharacter.Complete(message); in AiAgent.cs for static completion.
