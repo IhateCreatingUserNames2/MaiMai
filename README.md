@@ -108,6 +108,19 @@ Ensure the following components are added to the scene and properly configured i
 
 ---
 
+## Chat Response - AI Agent Dialogue Display - Chat Room
+
+MaiMai was built around MFPS Framework which uses PhotonChat. 
+To Retrieve the AI Response in MaiMai Check PicoDialogue RUnAsyncResponse() Function
+
+                 `ShowDialogue(aiResponse);`
+                `SendMessageToChat(aiResponse); // Optionally send to the chat system`
+
+  call aiResponse in your function and it will display the chat where you want. 
+
+---
+
+
 ## Using LangGraph
 
 ### **Setup:**
