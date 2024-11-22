@@ -120,6 +120,7 @@ Ensure the following components are added to the scene and properly configured i
 1. **Install Required Dependencies:**
    - Install **TypeScript**, **npx**, and **webpack**.
    - Check `package.json` in `MaiMai/Package/webpack/langgraph-bundler`.
+   - Extract node_modules.rar inside `MaiMai/Package/webpack/langgraph-bundler`.
 
 2. **Edit LangGraph Code:**
    - Modify `index.ts` as needed.
