@@ -105,7 +105,7 @@ Ensure the following components are added to the scene and properly configured i
 7. **`ModelSelector.cs`** (Optional: Load this script if you want to try the model selector.)
 8. **`LLMCharacterMemoryManager.cs`**
 9. **`RAG.cs`**
-   - Configure `SearchType`, `Chunking` (e.g., Token Splitter), and `NumToken` (default: 10).
+   - Configure `SearchType` DB Search, `Chunking` (e.g., Token Splitter), and `NumToken` (default: 10).
    - For custom configurations, consult `LLmCharacterMemoryManager.cs`.
 10. **`InitializePuerts.cs`** (Initializes the LangGraph system)
 
