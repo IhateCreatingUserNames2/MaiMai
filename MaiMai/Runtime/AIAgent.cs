@@ -58,7 +58,7 @@ public class AIAgent
         Debug.Log($"System Prompt Set for user {userId}: \n{customPrompt}");
     }
 
-    public async Task<string> Interact(string userId, string message)
+    public async Task<string> Interact(string userId, string message, string context = "")
     {
         if (userCharacters == null)
         {
@@ -82,16 +82,25 @@ public class AIAgent
 
         LLMCharacter userLlmCharacter = userCharacters[userId];
 
-        // **Retrieve relevant context using RAG**
+        // Retrieve context dynamically (if RAG is available)
         string retrievedContext = await RetrieveRelevantContextAsync(message, userId);
 
-        // **Construct the prompt with retrieved context and conversation history**
-        string prompt = ConstructConversationPromptWithEmbedding(userId, retrievedContext);
+        // If context is empty, check and retrieve fixed memory context
+        if (string.IsNullOrEmpty(context) && memoryManager != null)
+        {
+            Debug.Log("No context passed; attempting to retrieve fixed memory context.");
+            context = await memoryManager.RetrieveFixedMemoryContext(message);
+        }
 
-        // **Trim the prompt if it exceeds maximum length**
+
+        string combinedContext = await RetrieveRelevantContextAsync(message, userId);
+        string prompt = ConstructConversationPromptWithEmbedding(userId, combinedContext, context);
+
+
+        // Trim the prompt if it exceeds maximum length
         prompt = TrimPromptToMaxLength(prompt, userId);
 
-        // **Set the custom prompt for this interaction**
+        // Set the custom prompt for this interaction
         userLlmCharacter.SetPrompt(prompt, clearChat: false);
 
         string aiResponse = "";
@@ -105,7 +114,7 @@ public class AIAgent
             return "Sorry, there was an error processing your request.";
         }
 
-        // **Update the conversation history**
+        // Update the conversation history
         if (!UserConversations.ContainsKey(userId))
         {
             UserConversations[userId] = new List<MessageEntry>();
@@ -113,11 +122,16 @@ public class AIAgent
         UserConversations[userId].Add(new MessageEntry("User", message, Guid.NewGuid().ToString()));
         UserConversations[userId].Add(new MessageEntry(AgentName, aiResponse, Guid.NewGuid().ToString()));
 
-        // **Save the conversation to memory using RAG**
+        // Save the conversation to memory using RAG
         await SaveConversationAsync(userId);
 
         return aiResponse;
     }
+
+
+
+
+
 
     public async Task<string> RetrieveRelevantContextAsync(string query, string userId)
     {
@@ -127,36 +141,46 @@ public class AIAgent
             return "";
         }
 
-        // Perform a search in the RAG memory manager
-        string[] retrievedResults = await memoryManager.SearchChatHistoryAsync(query, 5);
+        // Perform searches in both Fixed Memory and RAG memory in parallel
+        var ragSearchTask = memoryManager.SearchChatHistoryAsync(query, 5);
+        var fixedMemorySearchTask = memoryManager.RetrieveFixedMemoryContext(query);
 
-        if (retrievedResults == null || retrievedResults.Length == 0)
+        await Task.WhenAll(ragSearchTask, fixedMemorySearchTask);
+
+        string[] ragResults = ragSearchTask.Result ?? Array.Empty<string>();
+        string fixedMemoryResults = fixedMemorySearchTask.Result;
+
+        // Combine results
+        StringBuilder combinedContext = new StringBuilder("Relevant Context:\n");
+
+        // Add RAG results
+        if (ragResults.Length > 0)
         {
-            Debug.Log("No relevant context found for the current interaction.");
-            return "";
-        }
-
-        // Label the relevant context
-        StringBuilder labeledContext = new StringBuilder();
-        labeledContext.AppendLine("Relevant Context:");
-
-        int entryNumber = 1;
-        foreach (var result in retrievedResults.Distinct())
-        {
-            // Check if this result already exists in the recent conversation
-            if (!UserConversations.ContainsKey(userId) ||
-                !UserConversations[userId].Any(e => e.Message.Equals(result, StringComparison.OrdinalIgnoreCase)))
+            combinedContext.AppendLine("From RAG Memory:");
+            foreach (var result in ragResults)
             {
-                labeledContext.AppendLine($"- Entry {entryNumber++}: \"{result}\"");
+                combinedContext.AppendLine($"- {result}");
             }
-
-            // Break if max context size is reached
-            if (labeledContext.Length > 500) break;
+        }
+        else
+        {
+            combinedContext.AppendLine("No results found in RAG Memory.");
         }
 
-        Debug.Log($"Retrieved Context:\n{labeledContext}");
-        return labeledContext.ToString().Trim();
+        // Add Fixed Memory results
+        if (!string.IsNullOrEmpty(fixedMemoryResults))
+        {
+            combinedContext.AppendLine("\nFrom Fixed Memory:");
+            combinedContext.AppendLine(fixedMemoryResults);
+        }
+        else
+        {
+            combinedContext.AppendLine("\nNo results found in Fixed Memory.");
+        }
+
+        return combinedContext.ToString();
     }
+
 
 
     private async Task SaveConversationAsync(string userId)
@@ -178,7 +202,7 @@ public class AIAgent
         }
     }
 
-    private string ConstructConversationPromptWithEmbedding(string userId, string retrievedContext)
+    private string ConstructConversationPromptWithEmbedding(string userId, string retrievedContext, string context)
     {
         // Get recent messages for conversation history
         List<MessageEntry> recentConversation = GetRecentMessages(userId, maxMessages: 6);
@@ -192,22 +216,38 @@ public class AIAgent
         }
 
         // Label the retrieved context (if any)
-        string contextSection = string.IsNullOrEmpty(retrievedContext)
+        string retrievedContextSection = string.IsNullOrEmpty(retrievedContext)
             ? ""
-            : $"{retrievedContext}\n\n";
+            : $"Retrieved Context:\n{retrievedContext}\n\n";
+
+        // Label the fixed memory context (if any)
+        string fixedContextSection = string.IsNullOrEmpty(context)
+            ? ""
+            : $"Context from File:\n{context}\n\n";
+
+        // Safeguard: If no context (retrieved or from file) is available
+        if (string.IsNullOrEmpty(retrievedContextSection) && string.IsNullOrEmpty(fixedContextSection))
+        {
+            Debug.LogWarning("No context found: Falling back to default behavior.");
+            retrievedContextSection = "Note: No additional context was found for this query.\n\n";
+        }
 
         // Build the final prompt
         string prompt =
             $"Your name is: {AgentName}\n" +
             $"Your Custom Prompt: {systemPrompt}\n\n" +
-            $"{contextSection}" +
-          
+            $"{retrievedContextSection}" +
+            $"{fixedContextSection}" +
             $"As {AgentName}, please provide an appropriate response to the user's last message.\n\n" +
-              "Respond in first person and do not include any conversation markers or role labels in your response." +
-            $"Conversation History:\n";
+            "Respond in first person and do not include any conversation markers or role labels in your response.\n" +
+            "Conversation History:\n\n" +
+            conversationHistory.ToString();
 
         return prompt.Trim();
     }
+
+
+
 
     private List<MessageEntry> GetRecentMessages(string userId, int maxMessages = 10, bool excludeAI = false)
     {

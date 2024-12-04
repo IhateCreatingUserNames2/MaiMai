@@ -46,7 +46,7 @@ public class PicoDialogue : MonoBehaviour, IChatClientListener
     public string npcBackground;
 
     [Header("Photon Chat Settings")]
-    public string appIdChat = "PHOTONCHATID"; // Replace with your Photon Chat App ID
+    public string appIdChat = "3c5a13f7-c3a4-4dfa-bd51-089fabc2c5ba"; // Replace with your Photon Chat App ID
     public string appVersion = "1.0";
     public string fixedRegion = "us"; // Adjust based on your region (e.g., eu, us)
 

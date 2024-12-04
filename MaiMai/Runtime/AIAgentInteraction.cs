@@ -1,5 +1,8 @@
 using LLMUnity;
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -8,12 +11,19 @@ public class AIAgentInteraction : MonoBehaviour
 {
     private AIAgent assignedAgent;
     private PicoDialogue picoDialogue;
+    public RAG rag;
 
     [Header("Fixed Agent Settings")]
     public bool isFixedAgent = false; // Toggle to indicate if the agent is predefined
     public string fixedAgentName; // Field for the agent's name (predefined)
     [TextArea]
     public string fixedAgentPrompt; // Field for the agent's custom prompt (predefined)
+
+    [Header("Fixed Memory Settings")]
+    public bool hasFixedMemory = false; // Toggle for fixed memory usage
+    public List<TextAsset> memoryFiles; // Text files for RAG context
+
+    private List<string> fixedMemoryData = new List<string>(); // Stores preloaded memory data
 
     public AIAgent AssignedAgent => assignedAgent;
 
@@ -32,9 +42,21 @@ public class AIAgentInteraction : MonoBehaviour
         {
             StartCoroutine(RetryInitialization());
         }
+
+        if (hasFixedMemory)
+        {
+            Debug.Log("Initializing fixed memory...");
+            StartCoroutine(InitializeFixedMemoryFlow());
+        }
     }
 
+    private IEnumerator InitializeFixedMemoryFlow()
+    {
+        Debug.Log("Loading fixed memory...");
+        yield return LoadFixedMemory();
 
+        Debug.Log("Fixed memory successfully loaded and embedded.");
+    }
 
     private IEnumerator RetryInitialization()
     {
@@ -56,6 +78,12 @@ public class AIAgentInteraction : MonoBehaviour
         }
 
         Debug.LogError("LLMCharacter or MemoryManager could not be found after retries.");
+    }
+
+    public void SetAIAgent(AIAgent agent)
+    {
+        assignedAgent = agent;
+        Debug.Log($"AI Agent '{agent.AgentName}' has been assigned to this interaction.");
     }
 
     private void InitializeFixedAgent(LLMCharacter llmCharacter, LLMCharacterMemoryManager memoryManager)
@@ -94,27 +122,76 @@ public class AIAgentInteraction : MonoBehaviour
         Debug.Log($"Fixed agent '{fixedAgentName}' successfully initialized.");
     }
 
-
-
-    // Method to assign an AI agent to this interaction system
-    public void SetAIAgent(AIAgent agent)
+    private async Task LoadFixedMemory()
     {
-        assignedAgent = agent;
-        Debug.Log($"AI Agent '{agent.AgentName}' has been assigned to this interaction.");
+        Debug.Log("Loading fixed memory...");
+        fixedMemoryData.Clear();
+
+        if (memoryFiles == null || memoryFiles.Count == 0)
+        {
+            Debug.LogWarning("No memory files provided in memoryFiles.");
+            return;
+        }
+
+        foreach (var file in memoryFiles)
+        {
+            if (file != null)
+            {
+                string fileContent = file.text;
+                await LLMCharacterMemoryManager.Instance.EmbedFileMessageAsync(fileContent, assignedAgent.AgentId);
+                fixedMemoryData.Add(fileContent);
+                Debug.Log($"File '{file.name}' embedded into memory for agent '{assignedAgent.AgentName}'.");
+            }
+        }
+
+        Debug.Log($"Fixed memory loaded with {fixedMemoryData.Count} entries.");
     }
 
-    // Interaction method
+
+
+
+
+
+    private bool EnsureRAGInitialized()
+    {
+        if (rag == null)
+        {
+            rag = gameObject.GetComponent<RAG>() ?? gameObject.AddComponent<RAG>();
+            rag.Init(SearchMethods.DBSearch, ChunkingMethods.SentenceSplitter);
+            Debug.Log("RAG system initialized.");
+        }
+        return rag != null;
+    }
+
+
+
     public async Task Interact(string userId, string message, System.Action<string> onResponseComplete)
     {
+        Debug.Log($"Interact called with userId: {userId}, message: {message}");
+
         if (assignedAgent == null)
         {
             Debug.LogError("No AI agent assigned to interact.");
             return;
         }
 
-        string response = await assignedAgent.Interact(userId, message);
+        // Ensure memory is loaded and embedded
+        if (hasFixedMemory && (fixedMemoryData == null || fixedMemoryData.Count == 0))
+        {
+            Debug.LogWarning("Fixed memory not ready. Waiting for initialization...");
+            await LoadFixedMemory(); // Ensure memory is loaded
+        }
+
+        // Pass an empty context to allow AIAgent to retrieve it
+        string context = "";
+
+        string response = await assignedAgent.Interact(userId, message, context);
         onResponseComplete?.Invoke(response);
     }
+
+
+
+
 
     // Handle player proximity to trigger interaction
     private void OnTriggerEnter(Collider other)
