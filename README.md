@@ -60,9 +60,11 @@ Utilities like changing models and voices are included but not fully integrated 
 ---
 
 ## Fixed NPCs
+![image](https://github.com/user-attachments/assets/e3cdb1a6-186f-438a-b0a7-51fbd06ee024)
 
 If adding fixed NPCs to your scene:
 - The UI is **not required**.
+- FIxed NPCS can have Fixed Memory: Upload Text Files. based on User Input, LLMCharacterMemory Will Perform A Search in those Text Files and Add Relevant Parts to the Rag thru rag.add, then retrieve it to the Prompt In AiAgent.cs. 
 - Agent Name and System Prompt can be configured by attaching `AiAgentInteraction.cs` to the NPC GameObject and TOGGLING IS FIXED ON.
 
 #
