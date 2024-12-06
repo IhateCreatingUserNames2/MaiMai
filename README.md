@@ -4,6 +4,26 @@
 **MaiMai AI Agent System** allows players to spawn personal AI agents running through LLMUnity with a **custom AI agent name** and **custom AI agent system prompt**. Additionally, you can create **fixed AI agents** in the scene with customizable names and system prompts.
 
 ---
+## HOW TO INSTALL MAI MAI WITHOUT LANG GRAPH 
+  - Install LLMUNITY FOR UNITY ENGINE: - GitHub Repository: [https://github.com/undreamai/LLMUnity](https://github.com/undreamai/LLMUnity)
+  - Install Newtonsoft JSON package : Enter Package Manager in Unity Engine -> Click Add by Name: com.unity.nuget.newtonsoft-json
+  - Install PhotonChat: https://assetstore.unity.com/packages/tools/network/photon-chat-45334 - It is not entirely Necessary, but it already supports PhotonChat Thru MFPS Asset. Check   ShowDialogue(aiResponse); and  SendMessageToChat(aiResponse);, They are two examples of how to display the LLM Output, Thru Dialogue text and Thru PhotonChat. You can totally Ignore PhotonChat. 
+  - DOWNLOAD https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLangGraph.unitypackage 
+  - IMPORT MAIMAINOLANGGRAPH PACKAGE
+   - ![image](https://github.com/user-attachments/assets/6be01eab-6dd6-495d-b817-d33a69bf3b00)
+
+  - Setup GameObject in Scene
+   - ![image](https://github.com/user-attachments/assets/8ed0e2c1-8d13-4436-a6d8-a5d58a3b3407)
+   - ![image](https://github.com/user-attachments/assets/2ead7957-1b3c-4777-8fd1-06aa8adea330)
+   - ![image](https://github.com/user-attachments/assets/96792c4c-7e95-4a0c-949a-bc42b39481fa)
+
+  - THE DEFAULT UI POSITION LOOK LIKE THIS:
+   - ![image](https://github.com/user-attachments/assets/542a9262-03cf-4c17-ba0e-7c1c4ae2dfe1)
+
+
+
+
+
 
 ## Requirements
 
