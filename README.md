@@ -17,8 +17,15 @@
    - ![image](https://github.com/user-attachments/assets/2ead7957-1b3c-4777-8fd1-06aa8adea330)
    - ![image](https://github.com/user-attachments/assets/96792c4c-7e95-4a0c-949a-bc42b39481fa)
 
+   - ADD AI AGENT INTERACTION TO EVERY NPC - AI AGENT PREFAB
+     - ![image](https://github.com/user-attachments/assets/eab77448-955d-4b6a-ae55-f0ae9dcda47c)
+     - If its a FIXED AGENT(added by Dev in game scene), Toggle it ON. Add Name and Prompt. You can also add Memory Files, Text Files with Data that the system will Search for Relevant Information Based on User INPUT, add them to RAG and send them back in the Prompt Build. Check AIAgent.cs for the Prompt Build Structure. You can choose what to pass. Also Check the Llmcharacter.chat Instruction, because it passes down Chat History to the Prompt. You can Call llmcharacter.complete if you dont want Chat History to be sent. 
+
+
   - THE DEFAULT UI POSITION LOOK LIKE THIS:
    - ![image](https://github.com/user-attachments/assets/542a9262-03cf-4c17-ba0e-7c1c4ae2dfe1)
+
+
 
 
 
