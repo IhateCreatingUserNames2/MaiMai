@@ -7,7 +7,7 @@
 ## HOW TO INSTALL MAI MAI WITHOUT LANG GRAPH 
   - Install LLMUNITY FOR UNITY ENGINE: - GitHub Repository: [https://github.com/undreamai/LLMUnity](https://github.com/undreamai/LLMUnity)
   - Install Newtonsoft JSON package : Enter Package Manager in Unity Engine -> Click Add by Name: com.unity.nuget.newtonsoft-json
-  - Install PhotonChat: https://assetstore.unity.com/packages/tools/network/photon-chat-45334 - It is not entirely Necessary, but it already supports PhotonChat Thru MFPS Asset. Check   ShowDialogue(aiResponse); and  SendMessageToChat(aiResponse);, They are two examples of how to display the LLM Output, Thru Dialogue text and Thru PhotonChat. edit the PhotonChat API KEY, This one is Demo key.  You can totally Ignore PhotonChat. 
+
   - DOWNLOAD MaiMaiNoLangGraph1.3.unitypackage From this GitHub Repository 
   - IMPORT MAIMAINOLANGGRAPH PACKAGE
    - ![image](https://github.com/user-attachments/assets/6be01eab-6dd6-495d-b817-d33a69bf3b00)
