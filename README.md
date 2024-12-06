@@ -192,7 +192,7 @@ Conversation History:
 
 ---
 
-### **Static Completion:**
+### **Static Completion( Completion Removes Chat History From Prompt:**
 Replace:
 ```csharp
 llmCharacter.Chat(message);
