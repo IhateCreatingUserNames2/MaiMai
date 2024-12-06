@@ -25,7 +25,12 @@
   - THE DEFAULT UI POSITION LOOK LIKE THIS:
    - ![image](https://github.com/user-attachments/assets/542a9262-03cf-4c17-ba0e-7c1c4ae2dfe1)
 
-
+ - Configure OnClick Functions in Buttons:
+  -  Select Ai Button  -> AiAgentManager. OnSelectAiClicked
+  -  Despawn Button -> AiAgentManager.DespawnAllAgents
+  - Create Agent Button -> AgentCreateUI.OnCreateAgentClicked 
+  - PainelButton -> Button -> ToggleAiUIButton.ToggleAiUiButtonVisibility
+  - SendButton -> PicoDialogue.OnSendButtonClicked 
 
 
 
