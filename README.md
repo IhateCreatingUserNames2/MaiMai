@@ -10,6 +10,8 @@
 ### **LLMUnity**
 - GitHub Repository: [https://github.com/undreamai/LLMUnity](https://github.com/undreamai/LLMUnity)
 
+Install Newtonsoft JSON package : Add by Name com.unity.nuget.newtonsoft-json
+
 ### **PuerTS for JS and LangGraph**
 - GitHub Repository: [https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md](https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md)
 - Learn about Lang Graph: https://langchain-ai.github.io/langgraphjs/ - Lang Graph already have a built-in RAG system, Memory Saver, but the Code is using LLMUnity RAg System thru AiAgent.cs RetrieveRelevantContextAsync() Function, that is embebbed in the Final Prompt. You can Remove the Context from the Prompt and pass llmcharacter.complete() Instead of llmcharacter.chat() to remove Rag and Chat History. Edit the Final Prompt in AiAgent.cs. You can alternatively call LLMUnity RAG System thru Lang Graph to Handle the Memory Whenever needed. 
