@@ -1,7 +1,9 @@
 
 # MaiMai AI Agent System
 
-**MaiMai AI Agent System** allows players to spawn personal AI agents running through LLMUnity with a **custom AI agent name** and **custom AI agent system prompt**. Additionally, you can create **fixed AI agents** in the scene with customizable names and system prompts.
+**MaiMai AI Agent System** allows players or Devs to spawn personal AI agents running through LLMUnity with a **custom AI agent name** and **custom AI agent system prompt**. Additionally, you can create **fixed AI agents** in the scene with customizable names and system prompts.
+
+This system Uses LLMUnity for inference. It has RAG Implementation for Each Ai Agent. Each one has its own memory and its own rag. 
 
 ---
 ## HOW TO INSTALL MAI MAI WITHOUT LANG GRAPH 
