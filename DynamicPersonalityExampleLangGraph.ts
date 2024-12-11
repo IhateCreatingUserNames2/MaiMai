@@ -72,8 +72,19 @@ async function invokeLangGraph(initialState) {
   return await app.invoke(initialState);
 }
 
+// Helper function to perform sentiment analysis
+async function analyzeSentiment(input) {
+  const sentimentQuery = `Analyze sentiment of the following input: "${input}". Provide a score between -1 (very negative) and 1 (very positive).`;
+  const result = await llmcharacter.complete({ prompt: sentimentQuery, maxTokens: 10 });
+  const sentimentScore = parseFloat(result); // Assuming the model returns a single score
+  return isNaN(sentimentScore) ? 0 : sentimentScore; // Default to neutral if parsing fails
+}
+
 // Process user input and interact with LangGraph
 export async function processUserInput(userInput) {
+  const sentimentScore = await analyzeSentiment(userInput);
+  const adjustedHumorLevel = Math.max(0, Math.min(10, 5 + sentimentScore * 5)); // Normalize humor level to [0, 10]
+
   const initialState = {
     personality1: {
       trait: 'analytical',
@@ -83,7 +94,7 @@ export async function processUserInput(userInput) {
       trait: 'decisive',
       actionPref: 'make_decision',
     },
-    humorLevel: 5, // Dynamic humor level, can oscillate over time
+    humorLevel: adjustedHumorLevel, // Dynamically adjusted humor level
     personalityTraits: {
       analytical: { level: 0.8 },
       decisive: { level: 0.7 },
@@ -94,12 +105,14 @@ export async function processUserInput(userInput) {
 
   try {
     console.log("Processing User Input:", userInput);
+    console.log("Sentiment Score:", sentimentScore, "Adjusted Humor Level:", adjustedHumorLevel);
     const finalState = await invokeLangGraph(initialState);
     handleFinalState(finalState);
   } catch (error) {
     console.error("Error during LangGraph interaction:", error);
   }
 }
+
 
 // Handle final state from LangGraph
 function handleFinalState(finalState) {
