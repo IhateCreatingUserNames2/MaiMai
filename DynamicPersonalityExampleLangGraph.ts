@@ -34,6 +34,8 @@ const GraphState = Annotation.Root({
   agentData: Annotation<string>(),
   humorLevel: Annotation<number>({ reducer: (_, humor) => humor }), // Humor level for emotional oscillation
   personalityTraits: Annotation<object>(), // Personality traits with weights and dynamics
+  sentimentLog: Annotation<number[]>({ reducer: (log, sentiment) => [...log, sentiment] }), // Log of sentiment scores
+  lastInteractions: Annotation<string[]>({ reducer: (log, interaction) => [...log.slice(-5), interaction] }), // Last 5 interactions
 });
 
 // Helper function to fetch and update personality traits and behaviors dynamically
@@ -41,6 +43,14 @@ async function fetchAndUpdatePersonality(state, trait, context) {
   const query = `Evaluate and update trait: ${trait} in context: ${context}`;
   const result = await llmcharacter.complete({ prompt: query, maxTokens: 100 });
   return result;
+}
+
+// Helper function to perform sentiment analysis
+async function analyzeSentiment(input, traits, humorLevel, sentimentLog, lastInteractions) {
+  const sentimentQuery = `Analyze sentiment of the following input: "${input}". Based on this Personality Trait: ${JSON.stringify(traits)} with the Last Humor Level: ${humorLevel}. Previous Sentiment Log: ${JSON.stringify(sentimentLog)}. Last Interactions: ${JSON.stringify(lastInteractions)}. Provide a score between -1 (very negative) and 1 (very positive).`;
+  const result = await llmcharacter.complete({ prompt: sentimentQuery, maxTokens: 10 });
+  const sentimentScore = parseFloat(result); // Assuming the model returns a single score
+  return isNaN(sentimentScore) ? 0 : sentimentScore; // Default to neutral if parsing fails
 }
 
 // Define LangGraph workflow with dynamic personality and mood modulation
@@ -72,47 +82,35 @@ async function invokeLangGraph(initialState) {
   return await app.invoke(initialState);
 }
 
-// Helper function to perform sentiment analysis
-async function analyzeSentiment(input) {
-  const sentimentQuery = `Analyze sentiment of the following input: "${input}". Provide a score between -1 (very negative) and 1 (very positive).`;
-  const result = await llmcharacter.complete({ prompt: sentimentQuery, maxTokens: 10 });
-  const sentimentScore = parseFloat(result); // Assuming the model returns a single score
-  return isNaN(sentimentScore) ? 0 : sentimentScore; // Default to neutral if parsing fails
-}
-
 // Process user input and interact with LangGraph
-export async function processUserInput(userInput) {
-  const sentimentScore = await analyzeSentiment(userInput);
-  const adjustedHumorLevel = Math.max(0, Math.min(10, 5 + sentimentScore * 5)); // Normalize humor level to [0, 10]
+export async function processUserInput(userInput, state) {
+  const sentimentScore = await analyzeSentiment(
+    userInput,
+    state.personalityTraits,
+    state.humorLevel,
+    state.sentimentLog,
+    state.lastInteractions
+  );
+  const adjustedHumorLevel = Math.max(0, Math.min(10, state.humorLevel + sentimentScore * 5)); // Normalize humor level to [0, 10]
 
-  const initialState = {
-    personality1: {
-      trait: 'analytical',
-      actionPref: 'gather_data',
-    },
-    personality2: {
-      trait: 'decisive',
-      actionPref: 'make_decision',
-    },
+  const updatedState = {
+    ...state,
     humorLevel: adjustedHumorLevel, // Dynamically adjusted humor level
-    personalityTraits: {
-      analytical: { level: 0.8 },
-      decisive: { level: 0.7 },
-    },
     sharedContext: `User Input: ${userInput}`,
     messages: [],
+    sentimentLog: state.sentimentLog.concat(sentimentScore), // Log sentiment
+    lastInteractions: state.lastInteractions.concat(userInput), // Log interaction
   };
 
   try {
     console.log("Processing User Input:", userInput);
     console.log("Sentiment Score:", sentimentScore, "Adjusted Humor Level:", adjustedHumorLevel);
-    const finalState = await invokeLangGraph(initialState);
+    const finalState = await invokeLangGraph(updatedState);
     handleFinalState(finalState);
   } catch (error) {
     console.error("Error during LangGraph interaction:", error);
   }
 }
-
 
 // Handle final state from LangGraph
 function handleFinalState(finalState) {
