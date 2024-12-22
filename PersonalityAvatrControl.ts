@@ -251,6 +251,6 @@ const initialState = {
 
 // Just an example call. In a real app, userInput might come from a text box or microphone, etc.
 processUserInput(
-  "Hey I'm just getting my feet wet with this stuff, but as an art/experiment thing I am going to try and give my LLM entity control over an avatar. I'll probably have a series of commands it can use to translate into real simple 3rd person control of a humanoid rig. Is there an easy way to make an LLM aware of a variable state in real time?",
+  "",
   initialState
 );
