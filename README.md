@@ -30,7 +30,8 @@ DISCORD FOR HELP: https://discord.gg/YZTKxYJt
    ## CODE ONLY PACKAGE ## 
    Download CODE ONLY Package: https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLang.1.4.Small.unitypackage
       Install LLMUnity, Install NewTonSoft, Import Script Only Package. 
-        ## CONFIGURE BUTTONS IF NECESSARY : ( CHECK SCENE FOR REFERENCE )
+      
+     ## CONFIGURE BUTTONS IF NECESSARY : ( CHECK SCENE FOR REFERENCE )
              - Configure OnClick Functions in Buttons:
              -  Select Ai Button  -> AiAgentManager. OnSelectAiClicked
               -  Despawn Button -> AiAgentManager.DespawnAllAgents
