@@ -29,15 +29,15 @@ DISCORD FOR HELP: https://discord.gg/YZTKxYJt
 
    ## CODE ONLY PACKAGE ## 
    Download CODE ONLY Package: https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLang.1.4.Small.unitypackage
-       Install LLMUnity, Install NewTonSoft, Import Script Only Package. 
-         ## CONFIGURE BUTTONS IF NECESSARY : ( CHECK SCENE FOR REFERENCE )
-                 - Configure OnClick Functions in Buttons:
-                 -  Select Ai Button  -> AiAgentManager. OnSelectAiClicked
-                 -  Despawn Button -> AiAgentManager.DespawnAllAgents
-                 - Create Agent Button -> AgentCreateUI.OnCreateAgentClicked 
-                 - PainelButton -> Button -> ToggleAiUIButton.ToggleAiUiButtonVisibility
-                 - SendButton -> PicoDialogue.OnSendButtonClicked 
-              Dont forget to Configure LLM and LLM RAG MODEL Inspector
+      Install LLMUnity, Install NewTonSoft, Import Script Only Package. 
+        ## CONFIGURE BUTTONS IF NECESSARY : ( CHECK SCENE FOR REFERENCE )
+             - Configure OnClick Functions in Buttons:
+             -  Select Ai Button  -> AiAgentManager. OnSelectAiClicked
+              -  Despawn Button -> AiAgentManager.DespawnAllAgents
+               - Create Agent Button -> AgentCreateUI.OnCreateAgentClicked 
+               - PainelButton -> Button -> ToggleAiUIButton.ToggleAiUiButtonVisibility
+               - SendButton -> PicoDialogue.OnSendButtonClicked 
+            Dont forget to Configure LLM and LLM RAG MODEL Inspector
 
 
 
