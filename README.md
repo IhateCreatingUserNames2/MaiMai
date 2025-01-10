@@ -13,10 +13,14 @@ This system Uses LLMUnity for inference. It has RAG Implementation for Each Ai A
 
           ## DEMO READY PACKAGE 
     
-  - DOWNLOAD DEMO-READY PACKAGE : https://drive.google.com/file/d/1uozXpzmAdyaEgcrH73eyamn2sFU2xrZr/view?usp=sharing
-  -   After Installing LLMUNITY and NewTonSoft , Import Demo-Ready package and run MaiMai/Scene/ Demo Scene 
+         - DOWNLOAD DEMO-READY PACKAGE : https://drive.google.com/file/d/1uozXpzmAdyaEgcrH73eyamn2sFU2xrZr/view?usp=sharing
+        -   After Installing LLMUNITY and NewTonSoft , Import Demo-Ready package and run MaiMai/Scene/ Demo Scene 
 
-     
+------------------------------------
+
+         ## CODE ONLY PACKAGE ## 
+         Download CODE ONLY Package: https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNolangGraph1.4.Small.unitypackage 
+         Install LLMUnity, Install NewTonSoft, Import Script Only Package. 
  
   
 
