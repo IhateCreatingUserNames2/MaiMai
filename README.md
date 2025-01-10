@@ -16,7 +16,14 @@ DISCORD FOR HELP: https://discord.gg/YZTKxYJt
           ## DEMO READY PACKAGE 
     
          - DOWNLOAD DEMO-READY PACKAGE : https://drive.google.com/file/d/1oo_H8AYmFuU8LzrqVf4MdjScLZRubJIe/view?usp=sharing
-         -  After Installing LLMUNITY and NewTonSoft , Import Demo-Ready package and run MaiMai/Scene/ Demo Scene 
+         -  After Installing LLMUNITY and NewTonSoft , Import Demo-Ready Package
+            - Configure LLM and LLM RAG MODEL Inspector
+        ![image](https://github.com/user-attachments/assets/0b9f73e5-562c-4f6e-bafc-5e08ac9d5c34)
+
+          To Test it just  Run MaiMai/Scene/ demo night city 
+
+    
+
 
 ------------------------------------
 
@@ -30,7 +37,7 @@ DISCORD FOR HELP: https://discord.gg/YZTKxYJt
                  - Create Agent Button -> AgentCreateUI.OnCreateAgentClicked 
                  - PainelButton -> Button -> ToggleAiUIButton.ToggleAiUiButtonVisibility
                  - SendButton -> PicoDialogue.OnSendButtonClicked 
-
+              Dont forget to Configure LLM and LLM RAG MODEL Inspector
 
 
 
@@ -131,8 +138,9 @@ Utilities like changing models and voices are included but not fully integrated 
 
 ---
 
-## Fixed NPCs
-![image](https://github.com/user-attachments/assets/e3cdb1a6-186f-438a-b0a7-51fbd06ee024)
+## Fixed NPCs CONFIG EXAMPLE
+![image](https://github.com/user-attachments/assets/ec384f8c-cde5-4fa3-85ba-a008b5592da9)
+
 
 If adding fixed NPCs to your scene:
 - The UI is **not required**.
