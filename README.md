@@ -19,7 +19,7 @@ This system Uses LLMUnity for inference. It has RAG Implementation for Each Ai A
 ------------------------------------
 
          ## CODE ONLY PACKAGE ## 
-         Download CODE ONLY Package: [https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNolangGraph1.4.Small.unitypackage ](https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLang.1.4.Small.unitypackage)
+         Download CODE ONLY Package: https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNolangGraph1.4.Small.unitypackage ](https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLang.1.4.Small.unitypackage
          Install LLMUnity, Install NewTonSoft, Import Script Only Package. 
  
   
