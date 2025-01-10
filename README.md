@@ -13,23 +13,23 @@ DISCORD FOR HELP: https://discord.gg/YZTKxYJt
 
   - Install Newtonsoft JSON package : Enter Package Manager in Unity Engine -> Click Add by Name: com.unity.nuget.newtonsoft-json
 
-          ## DEMO READY PACKAGE 
+ DEMO READY PACKAGE 
     
-         - DOWNLOAD DEMO-READY PACKAGE : https://drive.google.com/file/d/1oo_H8AYmFuU8LzrqVf4MdjScLZRubJIe/view?usp=sharing
-         -  After Installing LLMUNITY and NewTonSoft , Import Demo-Ready Package
-            - Configure LLM and LLM RAG MODEL Inspector
+  - DOWNLOAD DEMO-READY PACKAGE : https://drive.google.com/file/d/1oo_H8AYmFuU8LzrqVf4MdjScLZRubJIe/view?usp=sharing
+    -  After Installing LLMUNITY and NewTonSoft , Import Demo-Ready Package
+    - Configure LLM and LLM RAG MODEL Inspector
         ![image](https://github.com/user-attachments/assets/0b9f73e5-562c-4f6e-bafc-5e08ac9d5c34)
 
-          To Test it just  Run MaiMai/Scene/ demo night city 
+       To Test it just  Run MaiMai/Scene/ demo night city 
 
     
 
 
 ------------------------------------
 
-         ## CODE ONLY PACKAGE ## 
-         Download CODE ONLY Package: https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLang.1.4.Small.unitypackage
-         Install LLMUnity, Install NewTonSoft, Import Script Only Package. 
+   ## CODE ONLY PACKAGE ## 
+   Download CODE ONLY Package: https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLang.1.4.Small.unitypackage
+       Install LLMUnity, Install NewTonSoft, Import Script Only Package. 
          ## CONFIGURE BUTTONS IF NECESSARY : ( CHECK SCENE FOR REFERENCE )
                  - Configure OnClick Functions in Buttons:
                  -  Select Ai Button  -> AiAgentManager. OnSelectAiClicked
