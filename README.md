@@ -5,6 +5,8 @@
 
 This system Uses LLMUnity for inference. It has RAG Implementation for Each Ai Agent. Each one has its own memory and its own rag. 
 
+DISCORD FOR HELP: https://discord.gg/YZTKxYJt
+
 ---
 ## HOW TO INSTALL MAI MAI WITHOUT LANG GRAPH 
   - Install LLMUNITY FOR UNITY ENGINE: - GitHub Repository: [https://github.com/undreamai/LLMUnity](https://github.com/undreamai/LLMUnity)
@@ -55,6 +57,64 @@ Install Newtonsoft JSON package : Add by Name com.unity.nuget.newtonsoft-json
 1. Extract `MaiMai` to your Unity **Assets** folder.
 2. Extract `Resources` to your Unity **Assets/Resources** folder.
 
+## Using LangGraph
+
+### **Setup:**
+
+1. **Install Required Dependencies:**
+   - Install **TypeScript**, **npx**, and **webpack**.
+   - install PuerTS In Unity Engine https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md
+   - https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+   - Check `package.json` in `MaiMai/Package/webpack/langgraph-bundler`.
+   - Extract node_modules.rar inside `MaiMai/Package/webpack/langgraph-bundler`.
+
+2. **Edit LangGraph Code:**
+   - Modify `index.ts` as needed.
+
+3. **Bundle LangGraph:**
+   - Run the following command in the `MaiMai/Package/webpack/langgraph-bundler` folder:
+     ```bash
+     npx webpack
+     ```
+
+4. **Update Project:**
+   - Copy the generated `langgraph.bundle.mjs` from the `/dist/` folder.
+   - Paste it into `ProjectFolder/Assets/Resources/`.
+
+---
+
+## LangGraph Logic
+
+### **User Input Flow:**
+1. `InitializePuerts.cs` initializes the JS environment.
+2. Runs `testLangGraph.mjs -> langgraph.bundle.mjs -> index.ts`.
+3. Imports LangGraph and initializes the environment.
+
+### **Agent Creation:**
+```javascript
+const GraphState = Annotation.Root();
+```
+
+### **Process Flow:**
+1. Processes user input, invokes LangGraph, and handles the final state.
+2. Passes the final state to:
+   ```csharp
+   PicoDialogue.Instance.RunAsyncResponse(message);
+   ```
+3. `AIAgent` interacts with `RAG` to build the final prompt.
+
+
+
+
+
+
+
+
+
+
+
+
+INFORMATION ABOUT MAIMAI AND HOW IT WORKS.....
 ---
 
 
@@ -137,51 +197,7 @@ If you building Chat Bubbles, check the ChatHistory Options in LLMUnity to load 
 ---
 
 
-## Using LangGraph
 
-### **Setup:**
-
-1. **Install Required Dependencies:**
-   - Install **TypeScript**, **npx**, and **webpack**.
-   - install PuerTS In Unity Engine https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md
-   - https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
-   - Check `package.json` in `MaiMai/Package/webpack/langgraph-bundler`.
-   - Extract node_modules.rar inside `MaiMai/Package/webpack/langgraph-bundler`.
-
-2. **Edit LangGraph Code:**
-   - Modify `index.ts` as needed.
-
-3. **Bundle LangGraph:**
-   - Run the following command in the `MaiMai/Package/webpack/langgraph-bundler` folder:
-     ```bash
-     npx webpack
-     ```
-
-4. **Update Project:**
-   - Copy the generated `langgraph.bundle.mjs` from the `/dist/` folder.
-   - Paste it into `ProjectFolder/Assets/Resources/`.
-
----
-
-## LangGraph Logic
-
-### **User Input Flow:**
-1. `InitializePuerts.cs` initializes the JS environment.
-2. Runs `testLangGraph.mjs -> langgraph.bundle.mjs -> index.ts`.
-3. Imports LangGraph and initializes the environment.
-
-### **Agent Creation:**
-```javascript
-const GraphState = Annotation.Root();
-```
-
-### **Process Flow:**
-1. Processes user input, invokes LangGraph, and handles the final state.
-2. Passes the final state to:
-   ```csharp
-   PicoDialogue.Instance.RunAsyncResponse(message);
-   ```
-3. `AIAgent` interacts with `RAG` to build the final prompt.
 
 ---
 
