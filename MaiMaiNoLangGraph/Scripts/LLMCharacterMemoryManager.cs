@@ -134,6 +134,7 @@ public class LLMCharacterMemoryManager : MonoBehaviour
         embeddedMessageIds[agentId].Add(messageId);
     }
 
+
     private bool EnsureRAGInitialized()
     {
         if (rag == null)

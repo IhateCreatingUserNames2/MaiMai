@@ -9,6 +9,16 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))] // Ensure the GameObject has a Collider for proximity detection
 public class AIAgentInteraction : MonoBehaviour
 {
+
+    public enum InteractionMode { Proximity, KeyTrigger }
+
+    [Header("Interaction Settings")]
+    public InteractionMode interactionMode = InteractionMode.Proximity;
+    public KeyCode keyTrigger = KeyCode.F; // Default key for KeyTrigger mode
+
+    private bool playerInRange = false; // Tracks if player is in range for interaction
+
+
     private AIAgent assignedAgent;
     private PicoDialogue picoDialogue;
     public RAG rag;
@@ -49,6 +59,16 @@ public class AIAgentInteraction : MonoBehaviour
             StartCoroutine(InitializeFixedMemoryFlow());
         }
     }
+
+    void Update()
+    {
+        // Key Trigger Activation
+        if (interactionMode == InteractionMode.KeyTrigger && playerInRange && Input.GetKeyDown(keyTrigger))
+        {
+            TriggerInteraction();
+        }
+    }
+
 
     private IEnumerator InitializeFixedMemoryFlow()
     {
@@ -124,12 +144,12 @@ public class AIAgentInteraction : MonoBehaviour
 
     private async Task LoadFixedMemory()
     {
-        Debug.Log("Loading fixed memory...");
+        Debug.Log($"Loading fixed memory for agent '{assignedAgent.AgentName}'...");
         fixedMemoryData.Clear();
 
         if (memoryFiles == null || memoryFiles.Count == 0)
         {
-            Debug.LogWarning("No memory files provided in memoryFiles.");
+            Debug.LogWarning("No memory files provided.");
             return;
         }
 
@@ -143,9 +163,9 @@ public class AIAgentInteraction : MonoBehaviour
                 Debug.Log($"File '{file.name}' embedded into memory for agent '{assignedAgent.AgentName}'.");
             }
         }
-
-        Debug.Log($"Fixed memory loaded with {fixedMemoryData.Count} entries.");
+        Debug.Log($"Fixed memory loaded with {fixedMemoryData.Count} entries for agent '{assignedAgent.AgentName}'.");
     }
+
 
 
 
@@ -198,26 +218,28 @@ public class AIAgentInteraction : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            GameObject player = other.gameObject;
-            string playerName = player.name;
-            Debug.Log($"Player '{playerName}' interacted with AI Agent '{gameObject.name}'.");
+            playerInRange = true;
 
-            if (assignedAgent != null)
+            // Shared logic: Set agent data and prepare PicoDialogue
+            if (assignedAgent != null && picoDialogue != null)
             {
-                if (picoDialogue != null)
+                picoDialogue.SetAgentData(assignedAgent);
+
+                if (interactionMode == InteractionMode.Proximity)
                 {
-                    picoDialogue.SetAgentData(assignedAgent);
+                    // Proximity: Trigger immediately
                     picoDialogue.OpenPlayerInputUI();
-                    Debug.Log($"Interacting with AI Agent '{assignedAgent.AgentName}' successfully.");
+                    Debug.Log($"Proximity interaction: Interacting with AI Agent '{assignedAgent.AgentName}'.");
                 }
-                else
+                else if (interactionMode == InteractionMode.KeyTrigger)
                 {
-                    Debug.LogError("AIAgentInteraction: picoDialogue is not assigned.");
+                    // KeyTrigger: Wait for user to press the key
+                    Debug.Log($"Player in range. Press '{keyTrigger}' to interact with AI Agent '{assignedAgent.AgentName}'.");
                 }
             }
             else
             {
-                Debug.LogError("AIAgentInteraction: No AI agent is assigned to this interaction.");
+                Debug.LogError("AIAgentInteraction: Missing assigned agent or PicoDialogue.");
             }
         }
     }
@@ -226,18 +248,26 @@ public class AIAgentInteraction : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            if (assignedAgent != null)
-            {
-                if (picoDialogue != null)
-                {
-                    Debug.Log($"Player left interaction zone of AI Agent '{assignedAgent.AgentName}'.");
-                    picoDialogue.HidePlayerInputUI();
-                }
-                else
-                {
-                    Debug.LogError("AIAgentInteraction: picoDialogue is not assigned.");
-                }
-            }
+            playerInRange = false;
+            picoDialogue?.HidePlayerInputUI();
+            Debug.Log($"Player left interaction range of AI Agent '{gameObject.name}'.");
         }
     }
+
+
+    private void TriggerInteraction()
+    {
+        if (assignedAgent != null && picoDialogue != null)
+        {
+            picoDialogue.SetAgentData(assignedAgent);
+            picoDialogue.OpenPlayerInputUI();
+            Debug.Log($"Interacting with AI Agent '{assignedAgent.AgentName}'.");
+        }
+        else
+        {
+            Debug.LogError("AIAgentInteraction: Assigned agent or PicoDialogue is missing.");
+        }
+    }
+
+
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using LLMUnity;
+using System.Threading;
 
 [System.Serializable]
 public class AIAgent
@@ -141,45 +142,61 @@ public class AIAgent
             return "";
         }
 
-        // Perform searches in both Fixed Memory and RAG memory in parallel
-        var ragSearchTask = memoryManager.SearchChatHistoryAsync(query, 5);
-        var fixedMemorySearchTask = memoryManager.RetrieveFixedMemoryContext(query);
-
-        await Task.WhenAll(ragSearchTask, fixedMemorySearchTask);
-
-        string[] ragResults = ragSearchTask.Result ?? Array.Empty<string>();
-        string fixedMemoryResults = fixedMemorySearchTask.Result;
-
-        // Combine results
-        StringBuilder combinedContext = new StringBuilder("Relevant Context:\n");
-
-        // Add RAG results
-        if (ragResults.Length > 0)
+        try
         {
-            combinedContext.AppendLine("From RAG Memory:");
-            foreach (var result in ragResults)
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5))) // 5-second timeout
             {
-                combinedContext.AppendLine($"- {result}");
+                var ragSearchTask = memoryManager.SearchChatHistoryAsync(query, 5);
+                var fixedMemorySearchTask = memoryManager.RetrieveFixedMemoryContext(query);
+
+                await Task.WhenAll(ragSearchTask, fixedMemorySearchTask); // Concurrent execution
+
+                string[] ragResults = ragSearchTask.Result ?? Array.Empty<string>();
+                string fixedMemoryResults = fixedMemorySearchTask.Result;
+
+                StringBuilder combinedContext = new StringBuilder("Relevant Context:\n");
+
+                // Add RAG results
+                if (ragResults.Length > 0)
+                {
+                    combinedContext.AppendLine("From RAG Memory:");
+                    foreach (var result in ragResults)
+                    {
+                        combinedContext.AppendLine($"- {result}");
+                    }
+                }
+                else
+                {
+                    combinedContext.AppendLine("No results found in RAG Memory.");
+                }
+
+                // Add Fixed Memory results
+                if (!string.IsNullOrEmpty(fixedMemoryResults))
+                {
+                    combinedContext.AppendLine("\nFrom Fixed Memory:");
+                    combinedContext.AppendLine(fixedMemoryResults);
+                }
+                else
+                {
+                    combinedContext.AppendLine("\nNo results found in Fixed Memory.");
+                }
+
+                return combinedContext.ToString();
             }
         }
-        else
+        catch (TaskCanceledException)
         {
-            combinedContext.AppendLine("No results found in RAG Memory.");
+            Debug.LogWarning($"Context retrieval timed out for agent ID {AgentId}.");
+            return "Context retrieval timed out.";
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error retrieving context for agent ID {AgentId}: {ex.Message}");
+            return "Error retrieving context.";
         }
 
-        // Add Fixed Memory results
-        if (!string.IsNullOrEmpty(fixedMemoryResults))
-        {
-            combinedContext.AppendLine("\nFrom Fixed Memory:");
-            combinedContext.AppendLine(fixedMemoryResults);
-        }
-        else
-        {
-            combinedContext.AppendLine("\nNo results found in Fixed Memory.");
-        }
-
-        return combinedContext.ToString();
     }
+
 
 
 
@@ -191,16 +208,28 @@ public class AIAgent
             return;
         }
 
-        // Get recent messages to embed in RAG
         List<MessageEntry> messagesToEmbed = GetRecentMessages(userId, excludeAI: false);
 
         foreach (var messageEntry in messagesToEmbed)
         {
-            // Add labeled context to RAG
-            string labeledMessage = $"From {messageEntry.Sender}: \"{messageEntry.Message}\"";
-            await memoryManager.EmbedMessageAsync(new MessageEntry(messageEntry.Sender, labeledMessage, messageEntry.MessageId), AgentId);
+            if (messageEntry == null || string.IsNullOrWhiteSpace(messageEntry.Message))
+            {
+                Debug.LogWarning("Skipping null or empty message during embedding.");
+                continue;
+            }
+
+            try
+            {
+                string labeledMessage = $"From {messageEntry.Sender}: \"{messageEntry.Message}\"";
+                await memoryManager.EmbedMessageAsync(new MessageEntry(messageEntry.Sender, labeledMessage, messageEntry.MessageId), AgentId);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error embedding message: {ex.Message}");
+            }
         }
     }
+
 
     private string ConstructConversationPromptWithEmbedding(string userId, string retrievedContext, string context)
     {
