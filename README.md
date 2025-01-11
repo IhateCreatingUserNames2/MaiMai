@@ -24,6 +24,7 @@ DISCORD FOR HELP: https://discord.gg/YZTKxYJt
 
 
 REQUIRED ASSETS TO RUN THE SCENE: 
+#
 This demo mode runs on Free Invector Third Person Asset for Character Control and camera:  https://assetstore.unity.com/packages/tools/game-toolkits/third-person-controller-basic-locomotion-free-82048 
 The Scene is the demo scene from Night city asset: https://assetstore.unity.com/packages/3d/environments/urban/demo-city-by-versatile-studio-mobile-friendly-269772 
 The 3D Character Picola is also used in the demo as an NPC: https://assetstore.unity.com/packages/3d/characters/humanoids/picochan-220038 
