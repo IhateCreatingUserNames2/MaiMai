@@ -34,7 +34,7 @@ MaiMai is an AI Agent System for Unity that allows developers to create and mana
 - **Context-Aware AI**: Agents can retrieve relevant information from their memory to enhance responses
 - **Proximity & Key-Triggered Interactions**: Configure how players interact with AI agents
 - **Fixed Memory Support**: Pre-load knowledge directly into agents from text files
-- **Mobile Support**: Works on Android and iOS
+- **Mobile Support**: Works on Android ( Idk if Works on iOS) 
 - **User-Friendly UI**: Simple interface for creating and interacting with AI agents
 
 ## Installation
