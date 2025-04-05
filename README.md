@@ -244,7 +244,7 @@ The full demo requires:
 ## Support
 
 For help, questions, or feature requests:
-- Join our [Discord Server](https://discord.gg/VYsaEZJb)
+- Join LLmUnity Discord  [Discord Server](https://discord.gg/VYsaEZJb)
 - Submit issues on our [GitHub repository](https://github.com/IhateCreatingUserNames2/MaiMai)
 
 ## License
