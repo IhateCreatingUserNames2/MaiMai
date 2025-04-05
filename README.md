@@ -1,6 +1,7 @@
 # MaiMai AI Agent System
 
-![MaiMai Logo](https://your-logo-url-here.png)
+
+![121122212](https://github.com/user-attachments/assets/1c3e18ce-a9c6-425c-9f5b-d69dffd2a859)
 
 ## Overview
 
