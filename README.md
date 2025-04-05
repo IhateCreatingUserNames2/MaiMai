@@ -1,256 +1,252 @@
-
 # MaiMai AI Agent System
 
-**MaiMai AI Agent System** allows players or Devs to spawn personal AI agents running through LLMUnity with a **custom AI agent name** and **custom AI agent system prompt**. Additionally, you can create **fixed AI agents** in the scene with customizable names and system prompts.
+![MaiMai Logo](https://your-logo-url-here.png)
 
-This system Uses LLMUnity for inference. It has RAG Implementation for Each Ai Agent. Each one has its own memory and its own rag. 
+## Overview
 
-DISCORD FOR HELP: https://discord.gg/YZTKxYJt
+MaiMai is an AI Agent System for Unity that allows developers to create and manage intelligent NPCs powered by large language models. Built on top of LLMUnity, MaiMai enables:
 
----
-## HOW TO INSTALL MAI MAI WITHOUT LANG GRAPH 
-  - Install LLMUNITY FOR UNITY ENGINE: - GitHub Repository: [https://github.com/undreamai/LLMUnity](https://github.com/undreamai/LLMUnity)
+- **Dynamic AI Agent Creation**: Spawn AI agents with custom names and system prompts at runtime
+- **Fixed AI Agents**: Set up predefined NPC agents directly in your scenes
+- **Memory Management**: Each AI agent maintains its own conversation history
+- **Retrieval-Augmented Generation (RAG)**: Enhance AI responses with contextual knowledge
+- **Multi-Agent Support**: Create and manage multiple unique AI characters
 
-  - Install Newtonsoft JSON package : Enter Package Manager in Unity Engine -> Click Add by Name: com.unity.nuget.newtonsoft-json
+## Table of Contents
 
- DEMO READY PACKAGE 
-    
-  - DOWNLOAD DEMO-READY PACKAGE : https://drive.google.com/file/d/1oo_H8AYmFuU8LzrqVf4MdjScLZRubJIe/view?usp=sharing
-    -  After Installing LLMUNITY and NewTonSoft , Import Demo-Ready Package
-    - Configure LLM and LLM RAG MODEL Inspector
-        ![image](https://github.com/user-attachments/assets/0b9f73e5-562c-4f6e-bafc-5e08ac9d5c34)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [System Architecture](#system-architecture)
+- [Components](#components)
+- [Usage Examples](#usage-examples)
+- [Configuration](#configuration)
+- [Demo Scene](#demo-scene)
+- [Support](#support)
+- [License](#license)
 
-       To Test it just  Run MaiMai/Scene/ demo night city 
-#
+## Features
 
-REQUIRED ASSETS TO RUN THE SCENE: 
-
-This demo mode runs on Free Invector Third Person Asset for Character Control and camera:  https://assetstore.unity.com/packages/tools/game-toolkits/third-person-controller-basic-locomotion-free-82048 
-The Scene is the demo scene from Night city asset: https://assetstore.unity.com/packages/3d/environments/urban/demo-city-by-versatile-studio-mobile-friendly-269772 
-The 3D Character Picola is also used in the demo as an NPC: https://assetstore.unity.com/packages/3d/characters/humanoids/picochan-220038 
-
-    
-
-
-------------------------------------
-
-   ## CODE ONLY PACKAGE ## 
-   Download CODE ONLY Package: https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLang.1.4.Small.unitypackage
-      Install LLMUnity, Install NewTonSoft, Import Script Only Package. 
-      
-     ## CONFIGURE BUTTONS IF NECESSARY : ( CHECK SCENE FOR REFERENCE )
-             - Configure OnClick Functions in Buttons:
-             -  Select Ai Button  -> AiAgentManager. OnSelectAiClicked
-              -  Despawn Button -> AiAgentManager.DespawnAllAgents
-               - Create Agent Button -> AgentCreateUI.OnCreateAgentClicked 
-               - PainelButton -> Button -> ToggleAiUIButton.ToggleAiUiButtonVisibility
-               - SendButton -> PicoDialogue.OnSendButtonClicked 
-            Dont forget to Configure LLM and LLM RAG MODEL Inspector
-
-
-
-
-
-
-## MaiMai With LangGraph 
- ## Requirements
-
-### **LLMUnity**
-- GitHub Repository: [https://github.com/undreamai/LLMUnity](https://github.com/undreamai/LLMUnity)
-
-Install Newtonsoft JSON package : Add by Name com.unity.nuget.newtonsoft-json
-
-### **PuerTS for JS and LangGraph**
-- GitHub Repository: [https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md](https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md)
-- Learn about Lang Graph: https://langchain-ai.github.io/langgraphjs/ - Lang Graph already have a built-in RAG system, Memory Saver, but the Code is using LLMUnity RAg System thru AiAgent.cs RetrieveRelevantContextAsync() Function, that is embebbed in the Final Prompt. You can Remove the Context from the Prompt and pass llmcharacter.complete() Instead of llmcharacter.chat() to remove Rag and Chat History. Edit the Final Prompt in AiAgent.cs. You can alternatively call LLMUnity RAG System thru Lang Graph to Handle the Memory Whenever needed. 
-
+- **Runtime Agent Creation**: Create AI agents with custom names and personalities during gameplay
+- **Persistent Memory**: Save and load conversation history for continuity across sessions
+- **Context-Aware AI**: Agents can retrieve relevant information from their memory to enhance responses
+- **Proximity & Key-Triggered Interactions**: Configure how players interact with AI agents
+- **Fixed Memory Support**: Pre-load knowledge directly into agents from text files
+- **Mobile Support**: Works on Android and iOS
+- **User-Friendly UI**: Simple interface for creating and interacting with AI agents
 
 ## Installation
 
-### **Download Contents:**
+### Prerequisites
 
-1. Extract `MaiMai` to your Unity **Assets** folder.
-2. Extract `Resources` to your Unity **Assets/Resources** folder.
+- Unity 2021 LTS or newer
+- LLMUnity package
+- Newtonsoft JSON package
 
-## Using LangGraph
+### Installation Steps
 
-### **Setup:**
+1. **Install LLMUnity**:
+   - Via GitHub: Add package from git URL `https://github.com/undreamai/LLMUnity.git`
+   - Or via Asset Store: [LLMUnity Asset](https://assetstore.unity.com/packages/slug/273604)
 
-1. **Install Required Dependencies:**
-   - Install **TypeScript**, **npx**, and **webpack**.
-   - install PuerTS In Unity Engine https://github.com/Tencent/puerts/blob/master/doc/unity/en/install.md
-   - https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
-   - Check `package.json` in `MaiMai/Package/webpack/langgraph-bundler`.
-   - Extract node_modules.rar inside `MaiMai/Package/webpack/langgraph-bundler`.
+2. **Install Newtonsoft JSON**:
+   - Open Package Manager in Unity
+   - Click "Add package by name"
+   - Enter: `com.unity.nuget.newtonsoft-json`
+   - Click "Add"
 
-2. **Edit LangGraph Code:**
-   - Modify `index.ts` as needed.
+3. **Install MaiMai**:
+   
+   **Option 1: Full Demo Package**
+   - Download the [Demo-Ready Package](https://drive.google.com/file/d/1oo_H8AYmFuU8LzrqVf4MdjScLZRubJIe/view?usp=sharing)
+   - Import the package into your Unity project
+   
+   **Option 2: Code-Only Package**
+   - Download the [Code-Only Package](https://github.com/IhateCreatingUserNames2/MaiMai/blob/main/MaiMaiNoLang.1.4.Small.unitypackage)
+   - Import the package into your Unity project
 
-3. **Bundle LangGraph:**
-   - Run the following command in the `MaiMai/Package/webpack/langgraph-bundler` folder:
-     ```bash
-     npx webpack
-     ```
+## Quick Start
 
-4. **Update Project:**
-   - Copy the generated `langgraph.bundle.mjs` from the `/dist/` folder.
-   - Paste it into `ProjectFolder/Assets/Resources/`.
+1. **Configure LLM**:
+   - Create a GameObject and add the `LLM` component
+   - Download or load a model using the LLM Model Manager
 
----
+2. **Configure RAG**:
+   - Create a GameObject and add the `RAG` component
+   - Select your preferred search and chunking methods
 
-## LangGraph Logic
+3. **Setup UI**:
+   - Configure the required UI components (see Configuration section)
 
-### **User Input Flow:**
-1. `InitializePuerts.cs` initializes the JS environment.
-2. Runs `testLangGraph.mjs -> langgraph.bundle.mjs -> index.ts`.
-3. Imports LangGraph and initializes the environment.
+4. **Run Your Scene**:
+   - Start your game
+   - Create AI agents or interact with fixed agents
 
-### **Agent Creation:**
-```javascript
-const GraphState = Annotation.Root();
-```
+## System Architecture
 
-### **Process Flow:**
-1. Processes user input, invokes LangGraph, and handles the final state.
-2. Passes the final state to:
-   ```csharp
-   PicoDialogue.Instance.RunAsyncResponse(message);
-   ```
-3. `AIAgent` interacts with `RAG` to build the final prompt.
+MaiMai is built around several key components that work together:
 
+- **AIManager**: Singleton that tracks and manages all AI agents in the game
+- **AIAgent**: Core class representing an AI character with its own memory and personality
+- **AIAgentInteraction**: Handles player proximity and interaction triggers
+- **AIAgentManager**: Manages spawning and despawning of AI agents
+- **AgentCreateUI**: UI for creating new AI agents at runtime
+- **PicoDialogue**: Manages dialogue UI and interaction flow
+- **LLMCharacterMemoryManager**: Handles semantic memory storage and retrieval
 
+## Components
 
+### AIManager
 
+The central registry for all AI agents. It:
+- Maintains a dictionary of all active AI agents
+- Provides methods to retrieve agents by name or ID
+- Handles loading agents from saved data on startup
 
+### AIAgent
 
+Represents an individual AI character. Each agent has:
+- Unique ID and name
+- Custom system prompt defining personality
+- Conversation history per user
+- Memory management system
+- Methods for interacting with users
 
+### AIAgentInteraction
 
+Controls how players can interact with AI agents in the scene:
+- Proximity detection via colliders
+- Key-triggered interactions
+- Fixed memory loading for pre-defined knowledge
 
+### AgentCreateUI
 
+UI component for creating new AI agents with:
+- Custom name fields
+- Custom system prompt fields
+- Creation button
 
+### PicoDialogue
 
-INFORMATION ABOUT MAIMAI AND HOW IT WORKS.....
----
+Manages the dialogue UI system:
+- Displays AI responses
+- Handles player input
+- Optional text-to-speech functionality
 
+### LLMCharacterMemoryManager
 
-### **Default UI Configuration:**
+Manages the semantic memory system:
+- Embeds messages into vector space
+- Retrieves contextually relevant information
+- Supports both dynamic and fixed memory
 
-For user interaction, MaiMai requires a UI with fields like:
-- **AI Agent Name**
-- **System Prompt**
-- **Drop-down list of created agents**
-- **Buttons to Spawn and Remove agents**
+## Usage Examples
 
-Utilities like changing models and voices are included but not fully integrated yet.
-![image](https://github.com/user-attachments/assets/427dd1bd-f1e1-487d-8356-60fdd7f04aeb)
+### Creating a Fixed AI Agent in a Scene
 
----
-
-## Fixed NPCs CONFIG EXAMPLE
-![image](https://github.com/user-attachments/assets/ec384f8c-cde5-4fa3-85ba-a008b5592da9)
-
-
-If adding fixed NPCs to your scene:
-- The UI is **not required**.
-- FIxed NPCS can have Fixed Memory: Upload Text Files. based on User Input, LLMCharacterMemory Will Perform A Search in those Text Files and Add Relevant Parts to the Rag thru rag.add, then retrieve it to the Prompt In AiAgent.cs. 
-- Agent Name and System Prompt can be configured by attaching `AiAgentInteraction.cs` to the NPC GameObject and TOGGLING IS FIXED ON.
-
-#
-
-Fixed NPC
-
-![image](https://github.com/user-attachments/assets/92d1fd35-2300-43c1-a564-d849066f6e1c)
-
-#
-
-DYNAMIC USER GENERATED NPC
-
-![image](https://github.com/user-attachments/assets/e78beecb-2721-4cdf-9318-12a70c5dc2d9)
-
-
-### **Important:**
-- Every prefab must include the `AiAgentInteraction.cs` script.
-- Toggle the **Fixed Agent** option in the inspector.
-
----
-
-## Required Scene Components
-
-Ensure the following components are added to the scene and properly configured in the Unity Inspector:
-
-1. **`AgentCreateUI.cs`** (For user panel and Registering Ai Agents in the AI Manager. Ai Agent Interaction Also does this for Fixed Agents)
-2. **`PicoDialogue.cs`** (Handles user input UI and LLM response display)
-   - Add the `PicoDialogue.onSendButtonClicked()` method to the button's `onClick()` event.
-   - Leave NPC configurations blank for dynamic agents.
-3. **`LLmCharacter.cs`** (Leave NPC configurations blank for dynamic agents)
-4. **`LLM.cs`**
-   - Remember to download models and RAG models.
-   - **Note:** Some Android utility scripts hardcode models (e.g., 1b and 3B). If adding more, adjust `LLMUnitySetupHelper.cs` accordingly.
-5. **`AIManager.cs`**
-6. **`AIAgentManager.cs`**
-   - Configure in the Inspector.
-   - **Current limitation:** Only supports one prefab model for user-created agents (dynamic support planned).
-   - Ensure every prefab includes `AiAgentInteraction.cs`.
-7. **`ModelSelector.cs`** (Optional: Load this script if you want to try the model selector.)
-8. **`LLMCharacterMemoryManager.cs`**
-9. **`RAG.cs`**
-   - Configure `SearchType` DB Search, `Chunking` (e.g., Token Splitter), and `NumToken` (default: 10).
-   - For custom configurations, consult `LLmCharacterMemoryManager.cs`.
-10. **`InitializePuerts.cs`** (Initializes the LangGraph system)
-
----
-
-## Chat Response - AI Agent Dialogue Display - Chat Room
-
-To Retrieve the AI Response in MaiMai Check PicoDialogue RUnAsyncResponse() Function
-
-                 `ShowDialogue(aiResponse);`
-                `SendMessageToChat(aiResponse); // Optionally send to the chat system`
-
-  call aiResponse in your function and it will display the Response where you want.
-If you building Chat Bubbles, check the ChatHistory Options in LLMUnity to load Previous messages, if your own chat settings doesnt have a history function... 
-
----
-
-
-
-
----
-
-## Final Prompt Structure
-
-The system constructs the following prompt:
-```
-Your name is: {AgentName}
-Your Custom Prompt: {systemPrompt}
-
-{contextSection}
-
-As {AgentName}, please provide an appropriate response to the user's last message.
-
-Respond in first person and do not include any conversation markers or role labels in your response.
-
-Conversation History:
-[ Chat history added from llmcharacter.chat feature ]
-```
-
----
-
-### **Static Completion( Completion Removes Chat History From Prompt:**
-Replace:
 ```csharp
-llmCharacter.Chat(message);
-```
-With:
-```csharp
-llmCharacter.Complete(message);
-```
-In `AiAgent.cs` for static completion.
+// Add AIAgentInteraction component to your NPC GameObject
+AIAgentInteraction interaction = npcObject.AddComponent<AIAgentInteraction>();
 
----
+// Configure the agent
+interaction.isFixedAgent = true;
+interaction.fixedAgentName = "Shop Keeper";
+interaction.fixedAgentPrompt = "You are a friendly shop keeper in a fantasy town. You sell potions and magical items.";
+
+// Optionally add fixed memory
+interaction.hasFixedMemory = true;
+interaction.memoryFiles = new List<TextAsset>() { shopInventoryText };
+```
+
+### Creating an AI Agent at Runtime
+
+```csharp
+// Get references
+AIAgentManager aiManager = FindObjectOfType<AIAgentManager>();
+string agentName = "Personal Assistant";
+string customPrompt = "You are a helpful AI assistant that accompanies the player.";
+
+// Spawn the agent
+aiManager.SpawnAI(agentName);
+```
+
+### Interacting with an AI Agent
+
+```csharp
+AIAgentInteraction interaction = FindObjectOfType<AIAgentInteraction>();
+string userId = "Player1";
+string message = "Hello, who are you?";
+
+// Send message to agent
+await interaction.Interact(userId, message, (response) => {
+    Debug.Log("AI responded: " + response);
+});
+```
+
+## Configuration
+
+### Required UI Setup
+
+Configure the following UI components:
+
+1. **AI Agent Manager:**
+   - Select AI Button → `AIAgentManager.OnSelectAIClicked`
+   - Despawn Button → `AIAgentManager.DespawnAllAgents`
+   - AI Dropdown → Assign your dropdown component
+
+2. **Agent Create UI:**
+   - Create Agent Button → `AgentCreateUI.OnCreateAgentClicked`
+   - Agent Name Input → Assign your input field
+   - Custom Prompt Input → Assign your input field
+
+3. **Dialogue UI:**
+   - Send Button → `PicoDialogue.OnSendButtonClicked`
+   - Player Input Field → Assign your input field
+   - Dialogue Canvas → Assign your canvas
+   - Toggle Panel Button → `ToggleAIUIButton.ToggleAIUIButtonVisibility`
+
+### LLM Configuration
+
+Configure the LLM component:
+
+1. Download or load a model using the Model Manager
+2. Adjust inference parameters (temperature, context size, etc.)
+3. Configure GPU acceleration if needed
+
+### RAG Configuration
+
+Configure the RAG component:
+
+1. Select search method (DBSearch recommended)
+2. Select chunking method (SentenceSplitter recommended)
+3. Download or load an embedding model
+
+## Demo Scene
+
+The demo scene showcases MaiMai in a night city environment:
+
+- Location: `MaiMai/Scene/demo night city`
+- Features demonstrated:
+  - AI agent creation interface
+  - Fixed AI NPCs
+  - Dynamic AI spawning
+  - Dialogue interaction system
+
+### Required Assets for Demo
+
+The full demo requires:
+- [Invector Third Person Controller (Free)](https://assetstore.unity.com/packages/tools/game-toolkits/third-person-controller-basic-locomotion-free-82048)
+- [Demo City by Versatile Studio](https://assetstore.unity.com/packages/3d/environments/urban/demo-city-by-versatile-studio-mobile-friendly-269772)
+- [Picochan 3D Character](https://assetstore.unity.com/packages/3d/characters/humanoids/picochan-220038)
+
+## Support
+
+For help, questions, or feature requests:
+- Join our [Discord Server](https://discord.gg/YZTKxYJt)
+- Submit issues on our [GitHub repository](https://github.com/IhateCreatingUserNames2/MaiMai)
 
 ## License
 
-Refer to the respective repositories for licensing details of the required dependencies.
-  
+MaiMai is released under the MIT License. 
 
+LLMUnity is also released under the MIT License. Some LLM models may have their own licensing terms - please review them before use.
