@@ -1,7 +1,8 @@
 # MaiMai AI Agent System
 
 
-![121122212](https://github.com/user-attachments/assets/1c3e18ce-a9c6-425c-9f5b-d69dffd2a859)
+![small222](https://github.com/user-attachments/assets/a0062876-25a0-40fe-bfe1-ce24281808cb)
+
 
 ## Overview
 
