@@ -98,6 +98,10 @@ MaiMai is built around several key components that work together:
 
 ## Components
 
+![image](https://github.com/user-attachments/assets/3570ec74-2062-4828-bed0-26bc4f1f8b61)
+
+
+
 ### AIManager
 
 The central registry for all AI agents. It:
