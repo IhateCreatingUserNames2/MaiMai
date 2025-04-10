@@ -98,7 +98,7 @@ MaiMai is built around several key components that work together:
 
 ## Components
 
-![image](https://github.com/user-attachments/assets/3570ec74-2062-4828-bed0-26bc4f1f8b61)
+
 
 
 
@@ -147,7 +147,7 @@ Manages the semantic memory system:
 - Supports both dynamic and fixed memory
 
 ## Usage Examples
-
+![image](https://github.com/user-attachments/assets/3570ec74-2062-4828-bed0-26bc4f1f8b61)
 ### Creating a Fixed AI Agent in a Scene
 
 ```csharp
