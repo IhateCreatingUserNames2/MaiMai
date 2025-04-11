@@ -8,7 +8,7 @@
 
 MaiMai is an AI Agent System for Unity that allows developers to create and manage intelligent NPCs powered by large language models. Built on top of LLMUnity, MaiMai enables:
 
-- **Dynamic AI Agent Creation**: Spawn AI agents with custom names and system prompts at runtime
+- **Dynamic AI Agent Creation**: User or Dev's can Spawn AI agents with custom names and system prompts at runtime 
 - **Fixed AI Agents**: Set up predefined NPC agents directly in your scenes
 - **Memory Management**: Each AI agent maintains its own conversation history
 - **Retrieval-Augmented Generation (RAG)**: Enhance AI responses with contextual knowledge
