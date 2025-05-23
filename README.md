@@ -4,6 +4,10 @@
 ![small222](https://github.com/user-attachments/assets/a0062876-25a0-40fe-bfe1-ce24281808cb)
 
 
+
+######### THIS IS MEANT TO BE A PROTOTYPE, AN EXAMPLE, AN DEMONSTRATION, THIS IS NOT A PRODUCTION READY ASSET. THIS IS MEANT FOR STUDY ONLY #########
+ALSO IM NOT MAINAINING THIS ASSET ANYMORE, BECAUSE UNDERMAI SAID HORRIBLE THINGS TO ME, BECAUSE HE HAS THE EGO THE SIZE OF JUPTIER, ASSHOLE :3 
+
 ## Overview
 
 MaiMai is an AI Agent System for Unity that allows developers to create and manage intelligent NPCs powered by large language models. Built on top of LLMUnity, MaiMai enables:
